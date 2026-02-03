@@ -4,8 +4,10 @@ import { Input } from "~/components/ui/input";
 import { Search, Menu, X, Ticket } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "~/stores/useAuth";
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -51,20 +53,36 @@ const Navbar = () => {
 
           {/* 4. Auth Buttons */}
           <div className="flex items-center gap-3">
-            <Link to="/login" className="hidden sm:block">
-              <Button variant="ghost" size="sm" className="font-medium">
-                Log in
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <p>{user.name}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="font-medium"
+                  onClick={logout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden sm:block">
+                  <Button variant="ghost" size="sm" className="font-medium">
+                    Log in
+                  </Button>
+                </Link>
 
-            <Link to="/register">
-              <Button
-                size="sm"
-                className="bg-blue-600 text-white hover:bg-blue-700 transition-all"
-              >
-                Sign Up
-              </Button>
-            </Link>
+                <Link to="/register">
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 text-white hover:bg-blue-700 transition-all"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
 
             <Button
               variant="ghost"
