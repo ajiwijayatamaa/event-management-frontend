@@ -34,8 +34,6 @@ const Dashboard = () => {
             </Link>
           </Button>
         </div>
-
-        {/* BASIC STATISTICS: Poin "Basic Statistics" */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
