@@ -6,7 +6,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "~/stores/useAuth";
 
-const Navbar = () => {
+interface NavbarProps {
+  userRole?: "customer" | "organizer";
+  isLoggedIn?: boolean;
+}
+const Navbar = ({ userRole = "customer", isLoggedIn = true }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
