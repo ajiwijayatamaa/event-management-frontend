@@ -1,5 +1,4 @@
 import { Link, useParams } from "react-router";
-
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
@@ -15,7 +14,9 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { getEventById, mockReviews } from "~/data/mockData";
+import { getEventById, mockReviews } from "~/data/mockdata";
+import Navbar from "~/components/layout/navbar";
+import Footer from "~/components/layout/footer";
 
 const EventDetail = () => {
   const { id } = useParams<{ id: string }>();
