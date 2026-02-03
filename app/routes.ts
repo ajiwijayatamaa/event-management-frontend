@@ -8,4 +8,9 @@ export default [
   route("/organizer/events", "pages/organizer/myevent.tsx"),
   route("/events/:id", "pages/customer/even-detail.tsx"),
   route("/organizer/events/create", "pages/organizer/create-event.tsx"),
+  route("/organizer/transactions", "pages/organizer/transaction.tsx"),
+  route(
+    "/organizer/events/:id/attendees",
+    "pages/organizer/event-attendees.tsx",
+  ),
 ] satisfies RouteConfig;
