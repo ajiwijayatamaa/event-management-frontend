@@ -1,85 +1,66 @@
+import { useParams, Link } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 import { motion } from "framer-motion";
 import {
-  Users,
-  Ticket,
-  DollarSign,
-  Calendar,
+  ArrowLeft,
+  Search,
   Download,
+  Users,
   Mail,
+  Ticket,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
-
-import { useLoaderData, Link } from "react-router";
+import {
+  getEventById,
+  getTransactionsByEventId,
+  mockUsers,
+} from "~/data/mockdata";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 
-type Attendee = {
-  id: number;
-  ticketQuantity: number;
-  totalPrice: number;
-  pointsUsed: number;
-  confirmedAt: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    profilePicture?: string;
-  };
-  voucher?: {
-    code: string;
-  };
-  coupon?: {
-    code: string;
-  };
-};
-
-type EventData = {
-  event: {
-    id: number;
-    name: string;
-    location?: string;
-    startDate: string;
-    endDate: string;
-    totalSeats: number;
-    availableSeats: number;
-  };
-  attendees: Attendee[];
-};
-
 const EventAttendees = () => {
-  const { event, attendees } = useLoaderData<EventData>();
+  const { id } = useParams<{ id: string }>();
+  const event = getEventById(id || "");
+  const transactions = getTransactionsByEventId(id || "");
 
-  // Stats
-  const totalTicketsSold = attendees.reduce(
-    (sum, a) => sum + a.ticketQuantity,
+  if (!event) {
+    return (
+      <div className="flex min-h-screen">
+        <OrganizerSidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Event not found</h1>
+            <Button asChild className="mt-4">
+              <Link to="/organizer/events">Back to Events</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const confirmedAttendees = transactions.filter(
+    (t) => t.status === "confirmed",
+  );
+  const pendingAttendees = transactions.filter((t) => t.status === "pending");
+  const totalTicketsSold = confirmedAttendees.reduce(
+    (sum, t) => sum + t.ticketQuantity,
     0,
   );
-  const totalRevenue = attendees.reduce(
-    (sum, a) => sum + Number(a.totalPrice),
-    0,
-  );
-  const totalAttendees = attendees.length;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit",
     });
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -95,104 +76,70 @@ const EventAttendees = () => {
           >
             {/* Header */}
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <Button variant="ghost" asChild className="mb-4">
+                <Link to="/organizer/events">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Events
+                </Link>
+              </Button>
+              <div className="flex items-center justify-between">
                 <div>
                   <h1 className="font-display text-3xl font-bold">
-                    {event.name}
+                    Event Attendees
                   </h1>
-                  <p className="text-muted-foreground mt-1">
-                    Attendee List & Statistics
-                  </p>
+                  <p className="text-muted-foreground">{event.name}</p>
                 </div>
-                <div className="flex gap-3">
-                  <Button variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export CSV
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link to={`/events/${event.id}`}>View Event</Link>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Event Info */}
-              <div className="flex gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(event.startDate)}
-                </div>
-                {event.location && (
-                  <div className="flex items-center gap-2">
-                    📍 {event.location}
-                  </div>
-                )}
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
               </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card>
+            {/* Stats */}
+            <div className="mb-8 grid gap-4 sm:grid-cols-3">
+              <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
-                      <Users className="h-6 w-6 text-blue-600" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+                      <CheckCircle className="h-6 w-6 text-success" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Total Attendees
+                      <p className="text-sm text-muted-foreground">Confirmed</p>
+                      <p className="font-display text-2xl font-bold">
+                        {confirmedAttendees.length}
                       </p>
-                      <p className="text-2xl font-bold">{totalAttendees}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
+              <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
-                      <Ticket className="h-6 w-6 text-purple-600" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/10">
+                      <Clock className="h-6 w-6 text-warning" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pending</p>
+                      <p className="font-display text-2xl font-bold">
+                        {pendingAttendees.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                      <Ticket className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Tickets Sold
                       </p>
-                      <p className="text-2xl font-bold">{totalTicketsSold}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
-                      <DollarSign className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Total Revenue
-                      </p>
-                      <p className="text-2xl font-bold">
-                        Rp {totalRevenue.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100">
-                      <Ticket className="h-6 w-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Available Seats
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {event.availableSeats} / {event.totalSeats}
+                      <p className="font-display text-2xl font-bold">
+                        {totalTicketsSold}
                       </p>
                     </div>
                   </div>
@@ -200,111 +147,108 @@ const EventAttendees = () => {
               </Card>
             </div>
 
-            {/* Attendees Table */}
-            <Card>
+            {/* Search */}
+            <div className="mb-6 flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search attendees..." className="pl-10" />
+              </div>
+            </div>
+
+            {/* Attendees List */}
+            <Card className="border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Confirmed Attendees
+                  <Users className="h-5 w-5 text-primary" />
+                  Attendees List
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b text-left text-sm text-muted-foreground">
-                        <th className="pb-3 font-medium">Attendee</th>
-                        <th className="pb-3 font-medium">Tickets</th>
-                        <th className="pb-3 font-medium">Total Paid</th>
-                        <th className="pb-3 font-medium">Discount Used</th>
-                        <th className="pb-3 font-medium">Confirmed At</th>
-                        <th className="pb-3 font-medium text-right">Contact</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {attendees.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="py-8 text-center text-muted-foreground"
-                          >
-                            No confirmed attendees yet
-                          </td>
+                {transactions.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border text-left text-sm text-muted-foreground">
+                          <th className="pb-3 font-medium">Attendee</th>
+                          <th className="pb-3 font-medium">Order ID</th>
+                          <th className="pb-3 font-medium">Tickets</th>
+                          <th className="pb-3 font-medium">Amount</th>
+                          <th className="pb-3 font-medium">Status</th>
+                          <th className="pb-3 font-medium">Date</th>
+                          <th className="pb-3 font-medium">Actions</th>
                         </tr>
-                      ) : (
-                        attendees.map((attendee) => (
-                          <tr key={attendee.id} className="text-sm">
-                            <td className="py-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage
-                                    src={attendee.user.profilePicture}
-                                    alt={attendee.user.name}
-                                  />
-                                  <AvatarFallback>
-                                    {getInitials(attendee.user.name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium">
-                                    {attendee.user.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {attendee.user.email}
-                                  </p>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {transactions.map((transaction) => {
+                          const user = mockUsers.find(
+                            (u) => u.id === transaction.userId,
+                          );
+                          return (
+                            <tr key={transaction.id} className="text-sm">
+                              <td className="py-4">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarImage src={user?.profilePicture} />
+                                    <AvatarFallback>
+                                      {user?.name.charAt(0) || "U"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-medium">
+                                      {user?.name || "Unknown"}
+                                    </p>
+                                    <p className="text-muted-foreground">
+                                      {user?.email}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="py-4">
-                              <Badge variant="outline">
-                                {attendee.ticketQuantity}x
-                              </Badge>
-                            </td>
-                            <td className="py-4 font-bold">
-                              Rp {Number(attendee.totalPrice).toLocaleString()}
-                            </td>
-                            <td className="py-4">
-                              <div className="flex flex-col gap-1">
-                                {attendee.pointsUsed > 0 && (
-                                  <Badge className="bg-green-100 text-green-700 w-fit">
-                                    -{attendee.pointsUsed} pts
-                                  </Badge>
-                                )}
-                                {attendee.voucher && (
-                                  <Badge className="bg-blue-100 text-blue-700 w-fit">
-                                    {attendee.voucher.code}
-                                  </Badge>
-                                )}
-                                {attendee.coupon && (
-                                  <Badge className="bg-purple-100 text-purple-700 w-fit">
-                                    {attendee.coupon.code}
-                                  </Badge>
-                                )}
-                                {!attendee.pointsUsed &&
-                                  !attendee.voucher &&
-                                  !attendee.coupon && (
-                                    <span className="text-muted-foreground">
-                                      -
-                                    </span>
-                                  )}
-                              </div>
-                            </td>
-                            <td className="py-4 text-xs text-muted-foreground">
-                              {formatDate(attendee.confirmedAt)}
-                            </td>
-                            <td className="py-4 text-right">
-                              <Button variant="ghost" size="sm" asChild>
-                                <a href={`mailto:${attendee.user.email}`}>
+                              </td>
+                              <td className="py-4 font-mono">
+                                #{transaction.id}
+                              </td>
+                              <td className="py-4">
+                                {transaction.ticketQuantity}
+                              </td>
+                              <td className="py-4 font-medium">
+                                ${transaction.totalPrice}
+                              </td>
+                              <td className="py-4">
+                                <Badge
+                                  className={
+                                    transaction.status === "confirmed"
+                                      ? "bg-success/10 text-success"
+                                      : transaction.status === "pending"
+                                        ? "bg-warning/10 text-warning"
+                                        : "bg-destructive/10 text-destructive"
+                                  }
+                                >
+                                  {transaction.status.charAt(0).toUpperCase() +
+                                    transaction.status.slice(1)}
+                                </Badge>
+                              </td>
+                              <td className="py-4 text-muted-foreground">
+                                {formatDate(transaction.createdAt)}
+                              </td>
+                              <td className="py-4">
+                                <Button variant="ghost" size="sm">
                                   <Mail className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center">
+                    <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 font-semibold">No attendees yet</h3>
+                    <p className="mt-2 text-muted-foreground">
+                      Attendees will appear here once tickets are purchased.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
