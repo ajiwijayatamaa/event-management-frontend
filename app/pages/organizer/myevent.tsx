@@ -19,9 +19,10 @@ import {
   Trash2,
   Calendar,
   MapPin,
-  Tag,
   Eye,
+  Ticket,
 } from "lucide-react";
+// Pastikan mockEvents kamu menggunakan naming: availableSeats & totalSeats sesuai Prisma
 import { mockEvents } from "~/data/mockdata";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 
@@ -29,9 +30,9 @@ const MyEvents = () => {
   const events = mockEvents;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
+    return new Date(dateString).toLocaleDateString("id-ID", {
       day: "numeric",
+      month: "short",
       year: "numeric",
     });
   };
@@ -42,17 +43,17 @@ const MyEvents = () => {
     const end = new Date(event.endDate);
 
     if (now < start)
-      return { label: "Upcoming", color: "bg-primary/10 text-primary" };
+      return { label: "Upcoming", color: "bg-blue-100 text-blue-700" };
     if (now >= start && now <= end)
-      return { label: "Ongoing", color: "bg-success/10 text-success" };
-    return { label: "Past", color: "bg-muted text-muted-foreground" };
+      return { label: "Ongoing", color: "bg-green-100 text-green-700" };
+    return { label: "Past", color: "bg-gray-100 text-gray-600" };
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <OrganizerSidebar />
 
-      <main className="flex-1 bg-background">
+      <main className="flex-1">
         <div className="p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -62,24 +63,27 @@ const MyEvents = () => {
             {/* Header */}
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="font-display text-3xl font-bold">My Events</h1>
+                <h1 className="text-3xl font-bold tracking-tight">My Events</h1>
                 <p className="text-muted-foreground">
-                  Manage and monitor all your events
+                  Manage your event listings and monitor ticket sales.
                 </p>
               </div>
-              <Button variant="ghost" asChild>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
                 <Link to="/organizer/events/create">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Event
+                  Create New Event
                 </Link>
               </Button>
             </div>
 
-            {/* Search */}
+            {/* Search - Poin: Organizers can manage events */}
             <div className="mb-6 flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search events..." className="pl-10" />
+                <Input
+                  placeholder="Search by event name..."
+                  className="pl-10"
+                />
               </div>
             </div>
 
@@ -87,6 +91,7 @@ const MyEvents = () => {
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {events.map((event, index) => {
                 const status = getEventStatus(event);
+                // Sesuai Skema Prisma: totalSeats & availableSeats
                 const soldTickets = event.totalSeats - event.availableSeats;
                 const soldPercentage = (soldTickets / event.totalSeats) * 100;
 
@@ -97,127 +102,95 @@ const MyEvents = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                   >
-                    <Card className="group overflow-hidden border-border/50 hover:shadow-lg transition-all">
+                    <Card className="group overflow-hidden border-border/50 hover:shadow-md transition-all">
                       <div className="relative aspect-video overflow-hidden">
                         <img
-                          src={event.image}
+                          src={event.image || "/placeholder-event.jpg"}
                           alt={event.name}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                        <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
-                          <Badge className={status.color}>{status.label}</Badge>
+                        <div className="absolute top-3 left-3 flex gap-2">
+                          <Badge className={`${status.color} border-none`}>
+                            {status.label}
+                          </Badge>
+                        </div>
+                        <div className="absolute top-3 right-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="secondary"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-8 w-8 opacity-90"
                               >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuItem asChild>
                                 <Link to={`/events/${event.id}`}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Event
+                                  <Eye className="mr-2 h-4 w-4" /> View Landing
+                                  Page
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
                                 <Link to={`/organizer/events/${event.id}/edit`}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit Event
+                                  <Edit className="mr-2 h-4 w-4" /> Edit Event
                                 </Link>
                               </DropdownMenuItem>
+                              {/* Poin: Attendee List */}
                               <DropdownMenuItem asChild>
                                 <Link
                                   to={`/organizer/events/${event.id}/attendees`}
                                 >
-                                  <Users className="mr-2 h-4 w-4" />
-                                  View Attendees
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  to={`/organizer/events/${event.id}/vouchers/create`}
-                                >
-                                  <Tag className="mr-2 h-4 w-4" />
-                                  Create Voucher
+                                  <Users className="mr-2 h-4 w-4" /> View
+                                  Attendee List
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Event
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete Event
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
                         <div className="absolute bottom-3 left-3">
-                          <span className="font-display text-lg font-bold text-primary-foreground">
-                            ${event.price}
-                          </span>
+                          <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded text-sm font-bold">
+                            Rp {Number(event.price).toLocaleString("id-ID")}
+                          </div>
                         </div>
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-display text-lg font-semibold line-clamp-1">
+
+                      <CardContent className="p-5">
+                        <h3 className="text-lg font-bold line-clamp-1 mb-3">
                           {event.name}
                         </h3>
-                        <div className="mt-2 space-y-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-primary" />
+
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4 text-blue-600" />
                             <span>{formatDate(event.startDate)}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-primary" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4 text-blue-600" />
                             <span className="truncate">{event.location}</span>
                           </div>
                         </div>
 
-                        {/* Sales Progress */}
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">
-                              Tickets Sold
+                        {/* Sales Progress - Menggunakan field Prisma */}
+                        <div className="pt-4 border-t">
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <span className="flex items-center gap-1 font-medium">
+                              <Ticket className="h-3 w-3" /> Sales Progress
                             </span>
-                            <span className="font-medium">
-                              {soldTickets} / {event.totalSeats}
+                            <span className="text-muted-foreground">
+                              {soldTickets} / {event.totalSeats} Sold
                             </span>
                           </div>
-                          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                             <div
-                              className="h-full rounded-full bg-gradient-primary transition-all"
+                              className="h-full rounded-full bg-blue-600 transition-all"
                               style={{ width: `${soldPercentage}%` }}
                             />
                           </div>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="mt-4 flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            asChild
-                          >
-                            <Link to={`/organizer/events/${event.id}/edit`}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            asChild
-                          >
-                            <Link
-                              to={`/organizer/events/${event.id}/attendees`}
-                            >
-                              <Users className="mr-2 h-4 w-4" />
-                              Attendees
-                            </Link>
-                          </Button>
                         </div>
                       </CardContent>
                     </Card>
