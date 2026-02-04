@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+//apa yang ingin di simpan di global state
 export type UserAuth = {
   id: string;
   name: string;

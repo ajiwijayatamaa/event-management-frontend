@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Ticket } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
-import { Link, redirect } from "react-router";
+import { Link, redirect, useNavigate } from "react-router";
 import * as z from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
 } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
+import { axiosInstance } from "~/lib/axios";
 import { useAuth } from "~/stores/useAuth";
 
 const formSchema = z.object({
@@ -27,6 +28,9 @@ export const clientLoader = () => {
 };
 
 const Login = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,9 +39,24 @@ const Login = () => {
     },
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-    } catch (error) {}
+      const response = await axiosInstance.post("/api/users/login", {
+        login: data.email,
+        password: data.password,
+      });
+
+      login({
+        id: response.data.id,
+        name: response.data.name,
+        email: response.data.email,
+        usertoken: response.data["user-token"],
+      });
+      navigate("/");
+      console.log(response);
+    } catch (error) {
+      alert("Error login");
+    }
   }
   return (
     <div className="min-h-screen flex bg-background">
