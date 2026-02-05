@@ -41,19 +41,14 @@ const Login = () => {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      const response = await axiosInstance.post("/api/users/login", {
-        login: data.email,
+      const response = await axiosInstance.post("/auth/login", {
+        email: data.email,
         password: data.password,
       });
 
-      login({
-        id: response.data.id,
-        name: response.data.name,
-        email: response.data.email,
-        usertoken: response.data["user-token"],
-      });
+      login(response.data);
+
       navigate("/");
-      console.log(response);
     } catch (error) {
       alert("Error login");
     }
