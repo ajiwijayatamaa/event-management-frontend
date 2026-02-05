@@ -143,7 +143,6 @@ const Login = () => {
                   Sign In
                 </Button>
               </form>
-
               <div className="mt-6 text-center text-sm">
                 <span className="text-muted-foreground">
                   Don't have an account?{" "}
