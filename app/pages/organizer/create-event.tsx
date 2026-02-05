@@ -1,4 +1,7 @@
 import { Link } from "react-router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Controller, useForm } from "react-hook-form";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -24,7 +27,19 @@ import {
 } from "lucide-react";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 
+const formSchema = z.object({
+  email: z.email({ error: "invalid email address." }),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+});
+
 const CreateEvent = () => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
   return (
     <div className="flex min-h-screen bg-background">
       <OrganizerSidebar />

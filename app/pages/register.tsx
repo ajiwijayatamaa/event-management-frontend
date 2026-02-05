@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -19,8 +19,48 @@ import {
   UserCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
+import { Field, FieldError, FieldLabel } from "~/components/ui/field";
+import { axiosInstance } from "~/lib/axios";
+
+const formSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters."),
+  email: z.email({ error: "invalid email address." }),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+  role: z.enum(["CUSTOMER", "ORGANIZER"]),
+  referrerCode: z.string().optional(),
+});
 
 const Register = () => {
+  const navigate = useNavigate();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: "CUSTOMER",
+      referrerCode: "",
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    try {
+      await axiosInstance.post("/auth/register", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        referrerCode: data.referrerCode,
+      });
+
+      navigate("/login");
+    } catch (error) {
+      alert("Error login");
+    }
+  }
   return (
     <div className="min-h-screen flex bg-background">
       {/* 1. Left Side - Image (Sesuai style Login) */}
@@ -76,91 +116,122 @@ const Register = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                {/* Role Selection (Fitur 2: Customer & Organizer) */}
-                <div className="space-y-2">
-                  <Label>Join as a</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <label className="flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer hover:bg-secondary/50 transition-colors has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <User className="h-4 w-4" /> Customer
-                      </div>
-                      <input
-                        type="radio"
-                        name="role"
-                        value="customer"
-                        defaultChecked
-                        className="accent-blue-600"
+              <form
+                id="form-register"
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                {/* Name */}
+                <Controller
+                  name="name"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="form-register-name">Name</FieldLabel>
+                      <Input
+                        {...field}
+                        id="form-register-name"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Your Name"
                       />
-                    </label>
-                    <label className="flex items-center justify-between border rounded-md px-3 py-2 cursor-pointer hover:bg-secondary/50 transition-colors has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <UserCircle className="h-4 w-4" /> Organizer
-                      </div>
-                      <input
-                        type="radio"
-                        name="role"
-                        value="organizer"
-                        className="accent-blue-600"
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+                {/* EMAIL */}
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="form-register-email">
+                        Email
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id="form-register-email"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="you@example.com"
                       />
-                    </label>
-                  </div>
-                </div>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
 
+                {/* ROLE */}
+                <Controller
+                  name="role"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="form-register-role">Role</FieldLabel>
+                      <select
+                        {...field}
+                        id="form-register-role"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="CUSTOMER">Customer</option>
+                        <option value="ORGANIZER">Organizer</option>
+                      </select>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                {/* REFEREER */}
+                <Controller
+                  name="referrerCode"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="form-register-referral">
+                        Referral Code (optional)
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id="form-register-referral"
+                        placeholder="ABCD1234"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                {/* PASSWORD */}
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="name" placeholder="John Doe" className="pl-10" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john@example.com"
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {/* Referral Code Section (Fitur 2: Referral Registration) */}
-                <div className="space-y-2 pt-2 border-t">
-                  <Label htmlFor="referral" className="flex items-center gap-2">
-                    <Gift className="h-4 w-4 text-blue-600" />
-                    Referral Code (Optional)
-                  </Label>
-                  <Input
-                    id="referral"
-                    placeholder="Enter code to get rewards"
-                    className="bg-secondary/30"
+                  <Controller
+                    name="password"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="form-register-password">
+                          Password
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="form-register-password"
+                          type="password"
+                          aria-invalid={fieldState.invalid}
+                          placeholder="*******"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:opacity-90"
-                  size="lg"
-                >
-                  Create Account
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                <Button type="submit" form="form-register">
+                  Register
                 </Button>
               </form>
 
