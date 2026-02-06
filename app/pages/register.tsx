@@ -1,7 +1,10 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "framer-motion";
+import { Ticket } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
+import * as z from "zod";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import {
   Card,
   CardContent,
@@ -9,20 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import {
-  Ticket,
-  Mail,
-  Lock,
-  User,
-  Gift,
-  ArrowRight,
-  UserCircle,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import * as z from "zod";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
+import { Input } from "~/components/ui/input";
 import { axiosInstance } from "~/lib/axios";
 
 const formSchema = z.object({
@@ -32,7 +23,6 @@ const formSchema = z.object({
   role: z.enum(["CUSTOMER", "ORGANIZER"]),
   referrerCode: z.string().optional(),
 });
-
 const Register = () => {
   const navigate = useNavigate();
 
