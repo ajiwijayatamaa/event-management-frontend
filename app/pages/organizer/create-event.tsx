@@ -27,19 +27,49 @@ import {
 } from "lucide-react";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 
-const formSchema = z.object({
-  email: z.email({ error: "invalid email address." }),
-  password: z.string().min(8, "Password must be at least 8 characters."),
-});
+const formSchema = z
+  .object({
+    name: z.string().min(3, "Name must be at least 3 characters."),
+    startDate: z
+      .string()
+      .min(1, "Start date is required") // ganti required_error
+      .refine((val) => !isNaN(Date.parse(val)), "Invalid start date")
+      .transform((val) => new Date(val)),
+
+    endDate: z
+      .string()
+      .min(1, "End date is required") // ganti required_error
+      .refine((val) => !isNaN(Date.parse(val)), "Invalid end date")
+      .transform((val) => new Date(val)),
+  })
+  .refine((data) => data.endDate >= data.startDate, {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  });
+
+type FormInput = z.input<typeof formSchema>; // string dates
+type FormOutput = z.infer<typeof formSchema>; // Date dates
 
 const CreateEvent = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const today = new Date().toISOString().split("T")[0];
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormInput>({
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
-      email: "",
-      password: "",
+      name: "",
+      startDate: today, // string untuk input
+      endDate: today,
     },
   });
+
+  const onSubmit = (data: FormOutput) => {
+    // data.startDate & data.endDate = Date ✅
+    console.log(data.startDate, data.endDate);
+  };
   return (
     <div className="flex min-h-screen bg-background">
       <OrganizerSidebar />
