@@ -7,6 +7,7 @@ export type UserAuth = {
   name: string;
   email: string;
   role: string;
+  provider: string;
   referralCode: string;
   referredBy: number | null;
   profilePicture: string | null;
