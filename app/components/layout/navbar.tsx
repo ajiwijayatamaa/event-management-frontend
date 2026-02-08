@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router"; // Ganti ke "react-router-dom" jika pakai versi lama
+import { Link, useLocation } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Search, Menu, X, Ticket } from "lucide-react";
