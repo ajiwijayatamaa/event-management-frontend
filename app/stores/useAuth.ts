@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { axiosInstance } from "~/lib/axios";
 
 //apa yang ingin di simpan di global state
 export type UserAuth = {
@@ -19,7 +20,7 @@ export type UserAuth = {
 type Store = {
   user: UserAuth | null;
   login: (payload: UserAuth) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 export const useAuth = create<Store>()(
@@ -27,7 +28,11 @@ export const useAuth = create<Store>()(
     (set) => ({
       user: null,
       login: (payload) => set(() => ({ user: payload })),
-      logout: () => set(() => ({ user: null })),
+      logout: async () => {
+        await axiosInstance.post("/auth/logout");
+        set({ user: null });
+        window.location.href = "/";
+      },
     }),
     { name: "user-auth-storage" },
   ),
