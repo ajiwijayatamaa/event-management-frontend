@@ -14,7 +14,6 @@ export type UserAuth = {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  accessToken: string;
 };
 
 type Store = {

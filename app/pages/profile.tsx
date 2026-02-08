@@ -52,20 +52,9 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("photoProfile", data.photo);
 
-      const currentToken = user?.accessToken;
+      const result = await axiosInstance.post("/users/photo-profile", formData);
 
-      const result = await axiosInstance.post(
-        "/users/photo-profile",
-        formData,
-        {
-          headers: { Authorization: `Bearer ${currentToken}` },
-        },
-      );
-
-      login({
-        ...result.data,
-        accessToken: currentToken,
-      });
+      login({ ...result.data });
 
       alert("Upload photo success");
       form.reset(); // Reset input file setelah sukses
