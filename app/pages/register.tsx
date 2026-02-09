@@ -44,11 +44,12 @@ const Register = () => {
         email: data.email,
         password: data.password,
         referrerCode: data.referrerCode,
+        role: data.role,
       });
 
       navigate("/login");
     } catch (error) {
-      alert("Error login");
+      alert("Error registration");
     }
   }
   return (
