@@ -54,9 +54,12 @@ export default function Profile() {
 
       const result = await axiosInstance.post("/users/photo-profile", formData);
 
-      login({ ...result.data });
+      const { message, ...updatedUserData } = result.data;
 
-      alert("Upload photo success");
+      // UPDATE STATE: Gabungkan data user lama dengan data baru dari server
+      login({ ...user, ...updatedUserData });
+
+      alert(message || "Upload photo success");
       form.reset(); // Reset input file setelah sukses
     } catch (error) {
       console.error(error);
