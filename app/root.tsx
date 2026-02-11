@@ -7,6 +7,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { Toaster } from "~/components/ui/sonner";
+
 import type { Route } from "./+types/root";
 import "./app.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -54,6 +56,7 @@ export default function App() {
     <GoogleOAuthProvider clientId={googleClientId || ""}>
       <QueryClientProvider client={queryClient}>
         <Outlet />
+        <Toaster richColors position="top-right" />
       </QueryClientProvider>
     </GoogleOAuthProvider>
   );
