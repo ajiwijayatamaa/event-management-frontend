@@ -157,12 +157,6 @@ const Login = () => {
                           >
                             Password
                           </FieldLabel>
-                          <Link
-                            to="/forgot-password"
-                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                          >
-                            Forgot password?
-                          </Link>
                         </div>
                         <Input
                           {...field}
@@ -181,6 +175,12 @@ const Login = () => {
                       </Field>
                     )}
                   />
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
 
                 <div className="pt-2 space-y-3">
