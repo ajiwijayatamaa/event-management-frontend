@@ -16,4 +16,5 @@ export default [
     "pages/organizer/event-attendees.tsx",
   ),
   route("/forgot-password", "pages/forgot-password.tsx"),
+  route("/reset-password/:token", "pages/reset-password.tsx"),
 ] satisfies RouteConfig;

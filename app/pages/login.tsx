@@ -17,6 +17,8 @@ import { Input } from "~/components/ui/input";
 import { axiosInstance } from "~/lib/axios";
 import { useAuth } from "~/stores/useAuth";
 import { useGoogleLogin } from "@react-oauth/google";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.email({ error: "invalid email address." }),
@@ -50,7 +52,9 @@ const Login = () => {
       login(response.data);
       navigate("/");
     } catch (error) {
-      alert("Error login");
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || "Something Went Wrong");
+      }
     }
   }
 
