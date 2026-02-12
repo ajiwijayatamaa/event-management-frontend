@@ -1,9 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Ticket } from "lucide-react";
+import { Loader2, Ticket } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
-import * as z from "zod";
+import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -14,20 +13,12 @@ import {
 } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { axiosInstance } from "~/lib/axios";
+import useRegister from "~/hooks/api/useRegister";
+import { registerSchema, type RegisterSchema } from "~/schema/register";
 
-const formSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters."),
-  email: z.email({ error: "invalid email address." }),
-  password: z.string().min(8, "Password must be at least 8 characters."),
-  role: z.enum(["CUSTOMER", "ORGANIZER"]),
-  referrerCode: z.string().optional(),
-});
 const Register = () => {
-  const navigate = useNavigate();
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<RegisterSchema>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -36,21 +27,11 @@ const Register = () => {
       referrerCode: "",
     },
   });
+  // Panggil hook register
+  const { mutateAsync: register, isPending } = useRegister();
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    try {
-      await axiosInstance.post("/auth/register", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        referrerCode: data.referrerCode,
-        role: data.role,
-      });
-
-      navigate("/login");
-    } catch (error) {
-      alert("Error registration");
-    }
+  async function onSubmit(data: RegisterSchema) {
+    await register(data);
   }
   return (
     <div className="min-h-screen flex bg-background">
@@ -221,8 +202,20 @@ const Register = () => {
                   />
                 </div>
 
-                <Button type="submit" form="form-register">
-                  Register
+                <Button
+                  type="submit"
+                  form="form-register"
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 shadow-md font-semibold mt-2"
+                  disabled={isPending}
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Registering...
+                    </>
+                  ) : (
+                    "Register"
+                  )}
                 </Button>
               </form>
 
