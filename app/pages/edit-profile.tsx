@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Pointer } from "lucide-react"; // Import ikon di sini
 import { Controller, useForm } from "react-hook-form";
 import { redirect } from "react-router";
-import * as z from "zod";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -12,59 +12,32 @@ import {
 } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { axiosInstance } from "~/lib/axios";
+import useEditProfile from "~/hooks/api/useEditProfile";
+import {
+  editProfileSchema,
+  type EditProfileSchema,
+} from "~/schema/edit-profile";
 import { useAuth } from "~/stores/useAuth";
-import { Loader2, Pointer } from "lucide-react"; // Import ikon di sini
 
 export const clientLoader = () => {
   const user = useAuth.getState().user;
   if (!user) return redirect("/login");
 };
 
-const formSchema = z.object({
-  photo: z
-    .instanceof(File)
-    .refine((file) => file.size > 0, "Photo is required.")
-    .refine((file) => file.type.startsWith("image/"), "File must be an image.")
-    .refine(
-      (file) => file.size <= 5 * 1024 * 1024,
-      "Photo must be less than 5MB.",
-    ),
-});
-
-type FormProfile = z.infer<typeof formSchema>;
-
 export default function EditProfile() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
 
-  const form = useForm<FormProfile>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<EditProfileSchema>({
+    resolver: zodResolver(editProfileSchema),
     defaultValues: {
       photo: new File([], ""),
     },
   });
 
-  // Ambil status isSubmitting dari formState
-  const { isSubmitting } = form.formState;
-
-  async function onSubmit(data: FormProfile) {
-    try {
-      const formData = new FormData();
-      formData.append("photoProfile", data.photo);
-
-      const result = await axiosInstance.post("/users/photo-profile", formData);
-
-      const { message, ...updatedUserData } = result.data;
-
-      // UPDATE STATE: Gabungkan data user lama dengan data baru dari server
-      login({ ...user, ...updatedUserData });
-
-      alert(message || "Upload photo success");
-      form.reset(); // Reset input file setelah sukses
-    } catch (error) {
-      console.error(error);
-      alert("Gagal upload");
-    }
+  const { mutateAsync: editProfile, isPending } = useEditProfile();
+  async function onSubmit(data: EditProfileSchema) {
+    await editProfile(data);
+    form.reset();
   }
 
   return (
@@ -102,7 +75,7 @@ export default function EditProfile() {
                     id="form-profile-photo"
                     type="file"
                     accept="image/*"
-                    disabled={isSubmitting} // Matikan input saat loading
+                    disabled={isPending}
                     aria-invalid={fieldState.invalid}
                     onChange={(e) => {
                       const file = e.target.files?.[0] || new File([], "");
@@ -122,19 +95,18 @@ export default function EditProfile() {
               type="submit"
               form="form-profile"
               className="w-full"
-              disabled={isSubmitting} // Disable tombol agar tidak double click
+              disabled={isPending} // Disable tombol agar tidak double click
             >
-              {isSubmitting ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
                 </>
               ) : (
                 <>
                   <Pointer className="mr-2 h-4 w-4" />
-                  Upload Photo
                 </>
               )}
+              {isPending ? "Uploading..." : "Save Changes"}
             </Button>
           </form>
         </CardContent>
