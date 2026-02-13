@@ -2,12 +2,12 @@ import axios from "axios";
 import { useAuth } from "~/stores/useAuth";
 
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: import.meta.env.VITE_BASE_URL_API || "http://localhost:8000",
   withCredentials: true,
 });
 
 export const refreshInstance = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: import.meta.env.VITE_BASE_URL_API || "http://localhost:8000",
   withCredentials: true,
 });
 
