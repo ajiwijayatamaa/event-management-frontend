@@ -1,5 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, LogOut, Search, Ticket, User } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Search,
+  Ticket,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Input } from "~/components/ui/input";
@@ -13,11 +20,10 @@ const Navbar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    // NAVBAR: Border kita tipiskan jadi 4px saja, warna background lebih kalem
     <nav className="sticky top-0 z-50 w-full border-b-4 border-[#1a1a1a] bg-white">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo: Lebih simpel, shadow lebih kecil */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="flex h-8 w-8 items-center justify-center border-2 border-[#1a1a1a] bg-[#ff6b35] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
               <Ticket className="h-4 w-4 text-white" />
@@ -27,7 +33,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Navigasi Tengah: Hilangkan background kotak yang menutupi teks */}
+          {/* Navigasi Tengah */}
           <div className="hidden items-center gap-6 md:flex">
             <Link
               to="/"
@@ -43,7 +49,6 @@ const Navbar = () => {
 
           {/* Bagian Kanan */}
           <div className="flex items-center gap-4">
-            {/* Search Input: Dibuat lebih tipis */}
             {!location.pathname.startsWith("/organizer") && (
               <div className="hidden max-w-[200px] relative lg:block">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#1a1a1a]" />
@@ -57,7 +62,6 @@ const Navbar = () => {
 
             {user ? (
               <div className="relative">
-                {/* Profile Trigger: Lebih slim */}
                 <button
                   className="flex items-center gap-2 border-2 border-[#1a1a1a] bg-white p-1 pr-2 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -92,8 +96,21 @@ const Navbar = () => {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 5 }}
-                        className="absolute right-0 mt-2 w-48 border-4 border-[#1a1a1a] bg-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] z-50 overflow-hidden font-mono"
+                        className="absolute right-0 mt-2 w-56 border-4 border-[#1a1a1a] bg-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] z-50 overflow-hidden font-mono"
                       >
+                        {/* --- LOGIKA DINAMIS DISINI --- */}
+                        {user.role === "ORGANIZER" && (
+                          <Link
+                            to="/organizer/dashboard"
+                            onClick={() => setMenuOpen(false)}
+                            className="flex items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase border-b-2 border-[#1a1a1a] bg-[#ffffff] text-black hover:bg-[#e85a2a] transition-colors"
+                          >
+                            <LayoutDashboard className="h-3.5 w-3.5" />{" "}
+                            Organizer Dashboard
+                          </Link>
+                        )}
+                        {/* ----------------------------- */}
+
                         <Link
                           to="/profile"
                           onClick={() => setMenuOpen(false)}
@@ -101,6 +118,7 @@ const Navbar = () => {
                         >
                           <User className="h-3.5 w-3.5" /> Profile
                         </Link>
+
                         <button
                           onClick={() => {
                             logout();
@@ -125,7 +143,7 @@ const Navbar = () => {
                 </Link>
                 <Link to="/register">
                   <button className="bg-[#1a1a1a] text-white px-4 py-1.5 text-[10px] font-black uppercase border-2 border-[#1a1a1a] shadow-[2px_2px_0px_0px_rgba(255,107,53,1)]">
-                    Join
+                    Register
                   </button>
                 </Link>
               </div>

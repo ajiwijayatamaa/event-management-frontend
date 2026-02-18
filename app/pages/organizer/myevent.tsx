@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
   Clock,
@@ -10,7 +9,7 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { parseAsInteger, useQueryState } from "nuqs";
 import { Link, useNavigate } from "react-router"; // 1. Import useNavigate
 import { useDebounceValue } from "usehooks-ts";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
@@ -19,11 +18,8 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
-import { axiosInstance } from "~/lib/axios";
-import type { Event } from "~/types/event";
-import type { PageableResponse } from "~/types/pagination";
-import { parseAsInteger, useQueryState } from "nuqs";
 import useGetEvents from "~/hooks/api/useGetEvents";
+import { formatDate, formatDateShort } from "~/utils/formatter";
 
 const MyEvents = () => {
   const navigate = useNavigate();
@@ -135,27 +131,14 @@ const MyEvents = () => {
                         {/* Info Tanggal Event (Mulai) */}
                         <div className="flex items-center gap-1.5">
                           <Calendar size={14} className="text-blue-500" />
-                          {new Date(event.startDate).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            },
-                          )}
+                          <span>{formatDate(event.startDate)}</span>
                         </div>
                         {/* --- Tanggal Pembuatan Event --- */}
-                        <div className="flex items-center gap-1.5 italic text-[11px]">
+                        <div className="flex items-center gap-1.5 italic text-[11px] text-muted-foreground">
                           <Clock size={14} className="text-gray-400" />
-                          Dibuat:{" "}
-                          {new Date(event.createdAt).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            },
-                          )}
+                          <span>
+                            Dibuat: {formatDateShort(event.createdAt)}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1.5 font-bold text-foreground">
                           <Ticket size={14} className="text-blue-500" />
