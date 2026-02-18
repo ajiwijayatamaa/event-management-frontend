@@ -15,6 +15,7 @@ export type UserAuth = {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  points: number;
 };
 
 type Store = {
