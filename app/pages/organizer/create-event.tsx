@@ -1,75 +1,59 @@
-import { Link } from "react-router";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Controller, useForm } from "react-hook-form";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { Textarea } from "~/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "~/components/ui/card";
-
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
-  Save,
   Calendar,
-  MapPin,
-  Users,
-  Image as ImageIcon,
   FileText,
-  TicketPercent,
+  ImageIcon,
+  MapPin,
+  Save,
+  Users,
 } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { Link, redirect } from "react-router";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Field, FieldError, FieldLabel } from "~/components/ui/field";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
+import useCreateEvent from "~/hooks/api/useCreateEvent";
+import {
+  createEventSchema,
+  type CreateEventSchema,
+} from "~/schema/create-event";
+import { useAuth } from "~/stores/useAuth";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 
-const formSchema = z
-  .object({
-    name: z.string().min(3, "Name must be at least 3 characters."),
-    startDate: z
-      .string()
-      .min(1, "Start date is required") // ganti required_error
-      .refine((val) => !isNaN(Date.parse(val)), "Invalid start date")
-      .transform((val) => new Date(val)),
+export const clientLoader = () => {
+  const user = useAuth.getState().user;
+  if (!user) return redirect("/login");
+};
 
-    endDate: z
-      .string()
-      .min(1, "End date is required") // ganti required_error
-      .refine((val) => !isNaN(Date.parse(val)), "Invalid end date")
-      .transform((val) => new Date(val)),
-  })
-  .refine((data) => data.endDate >= data.startDate, {
-    message: "End date must be after start date",
-    path: ["endDate"],
-  });
-
-type FormInput = z.input<typeof formSchema>; // string dates
-type FormOutput = z.infer<typeof formSchema>; // Date dates
-
-const CreateEvent = () => {
+export default function CreateEvent() {
+  // Default values untuk form
   const today = new Date().toISOString().split("T")[0];
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormInput>({
-    resolver: zodResolver(formSchema) as any,
+  const form = useForm<CreateEventSchema>({
+    resolver: zodResolver(createEventSchema),
     defaultValues: {
       name: "",
-      startDate: today, // string untuk input
+      description: "",
+      location: "",
+      price: 0,
+      totalSeats: 100,
+      startDate: today,
       endDate: today,
+      image: undefined,
     },
   });
 
-  const onSubmit = (data: FormOutput) => {
-    // data.startDate & data.endDate = Date ✅
-    console.log(data.startDate, data.endDate);
-  };
+  const { mutateAsync: createEvent, isPending } = useCreateEvent();
+
+  async function onSubmit(data: CreateEventSchema) {
+    await createEvent(data);
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <OrganizerSidebar />
@@ -97,11 +81,16 @@ const CreateEvent = () => {
               </p>
             </div>
 
-            <form className="space-y-8 pb-20">
+            {/* FORM START */}
+            <form
+              id="form-create-event"
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8 pb-20"
+            >
               <div className="grid gap-8 lg:grid-cols-3">
                 {/* Main Content (Left) */}
                 <div className="lg:col-span-2 space-y-6">
-                  {/* Basic Information - Matching Prisma Model 'Event' */}
+                  {/* Basic Information */}
                   <Card className="border-border/50">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -110,37 +99,72 @@ const CreateEvent = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Event Name *</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          placeholder="Enter event name"
-                        />
-                      </div>
+                      {/* Name */}
+                      <Controller
+                        name="name"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="name">Event Name *</FieldLabel>
+                            <Input
+                              {...field}
+                              id="name"
+                              aria-invalid={fieldState.invalid}
+                              placeholder="Enter event name"
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          name="description"
-                          placeholder="Tell people what this event is about..."
-                          rows={8}
-                        />
-                      </div>
+                      {/* Description */}
+                      <Controller
+                        name="description"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="description">
+                              Description
+                            </FieldLabel>
+                            <Textarea
+                              {...field}
+                              id="description"
+                              aria-invalid={fieldState.invalid}
+                              placeholder="Tell people what this event is about..."
+                              rows={8}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="location"
-                            name="location"
-                            placeholder="Physical venue or link"
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+                      {/* Location */}
+                      <Controller
+                        name="location"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="location">Location</FieldLabel>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                {...field}
+                                id="location"
+                                aria-invalid={fieldState.invalid}
+                                placeholder="Physical venue or link"
+                                className="pl-10"
+                              />
+                            </div>
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
                     </CardContent>
                   </Card>
 
@@ -153,116 +177,126 @@ const CreateEvent = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="startDate">Start Date & Time *</Label>
-                        <Input
-                          id="startDate"
-                          name="startDate"
-                          type="datetime-local"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="endDate">End Date & Time *</Label>
-                        <Input
-                          id="endDate"
-                          name="endDate"
-                          type="datetime-local"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      {/* Start Date */}
+                      <Controller
+                        name="startDate"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="startDate">
+                              Start Date & Time *
+                            </FieldLabel>
+                            <Input
+                              {...field}
+                              id="startDate"
+                              type="datetime-local"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
 
-                  {/* VOUCHER - (Clue: Provided by Organizer) */}
-                  <Card className="border-border/50 border-primary/20 bg-primary/5">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <TicketPercent className="h-5 w-5 text-primary" />
-                        Event Voucher
-                      </CardTitle>
-                      <CardDescription>
-                        Create a special discount specifically for this event.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="voucherCode">Voucher Code</Label>
-                          <Input
-                            id="voucherCode"
-                            placeholder="E.g. DISKONASIK"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="discountPercentage">
-                            Discount (%)
-                          </Label>
-                          <Input
-                            id="discountPercentage"
-                            type="number"
-                            placeholder="10"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label htmlFor="voucherQuota">Quota</Label>
-                          <Input
-                            id="voucherQuota"
-                            type="number"
-                            placeholder="50"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="voucherExpiry">
-                            Voucher End Date
-                          </Label>
-                          <Input id="voucherExpiry" type="datetime-local" />
-                        </div>
-                      </div>
+                      {/* End Date */}
+                      <Controller
+                        name="endDate"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="endDate">
+                              End Date & Time *
+                            </FieldLabel>
+                            <Input
+                              {...field}
+                              id="endDate"
+                              type="datetime-local"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
                     </CardContent>
                   </Card>
                 </div>
 
                 {/* Sidebar (Right) */}
                 <div className="space-y-6">
-                  {/* Pricing & Capacity */}
+                  {/* Ticket Setting */}
                   <Card className="border-border/50">
                     <CardHeader>
                       <CardTitle className="text-lg">Ticket Setting</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="price">Price (Rp)</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
-                            Rp
-                          </span>
-                          <Input
-                            id="price"
-                            name="price"
-                            type="number"
-                            placeholder="0"
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+                      {/* Price */}
+                      <Controller
+                        name="price"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="price">Price (Rp)</FieldLabel>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                                Rp
+                              </span>
+                              <Input
+                                id="price"
+                                type="number"
+                                className="pl-10"
+                                aria-invalid={fieldState.invalid}
+                                name={field.name}
+                                ref={field.ref}
+                                onBlur={field.onBlur}
+                                value={field.value || ""}
+                                placeholder="Masukkan harga Ticket"
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ""
+                                      ? 0
+                                      : Number(e.target.value),
+                                  )
+                                }
+                              />
+                            </div>
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="totalSeats">Total Seats *</Label>
-                        <div className="relative">
-                          <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="totalSeats"
-                            name="totalSeats"
-                            type="number"
-                            placeholder="100"
-                            className="pl-10"
-                          />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground italic">
-                          Available seats will be set equal to total seats.
-                        </p>
-                      </div>
+                      {/* Total Seats */}
+                      <Controller
+                        name="totalSeats"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="totalSeats">
+                              Total Seats *
+                            </FieldLabel>
+                            <div className="relative">
+                              <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                {...field}
+                                id="totalSeats"
+                                type="number"
+                                className="pl-10"
+                                aria-invalid={fieldState.invalid}
+                              />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground italic mt-1">
+                              Available seats will be set equal to total seats.
+                            </p>
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
                     </CardContent>
                   </Card>
 
@@ -272,31 +306,55 @@ const CreateEvent = () => {
                       <CardTitle className="text-lg">Event Banner</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:bg-muted">
-                        <ImageIcon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <p className="mt-2 text-xs font-medium text-center">
-                          Upload Event Image
-                        </p>
-                        <input
-                          type="file"
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          accept="image/*"
-                        />
-                      </div>
+                      <Controller
+                        name="image"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:bg-muted">
+                              <ImageIcon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                              <p className="mt-2 text-xs font-medium text-center">
+                                {field.value
+                                  ? (field.value as File).name
+                                  : "Upload Event Image"}
+                              </p>
+                              <input
+                                type="file"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) field.onChange(file);
+                                }}
+                              />
+                            </div>
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
                     </CardContent>
                   </Card>
 
                   {/* Actions */}
                   <div className="flex flex-col gap-3">
-                    <Button variant="ghost" size="lg" className="w-full">
+                    <Button
+                      type="submit"
+                      form="form-create-event"
+                      size="lg"
+                      className="w-full"
+                      disabled={isPending}
+                    >
                       <Save className="mr-2 h-4 w-4" />
-                      Create Event
+                      {isPending ? "Creating..." : "Create Event"}
                     </Button>
                     <Button
                       variant="outline"
                       size="lg"
                       className="w-full"
                       asChild
+                      disabled={isPending}
                     >
                       <Link to="/organizer/events">Cancel</Link>
                     </Button>
@@ -309,6 +367,4 @@ const CreateEvent = () => {
       </main>
     </div>
   );
-};
-
-export default CreateEvent;
+}
