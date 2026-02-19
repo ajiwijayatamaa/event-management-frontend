@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { Link, useNavigate } from "react-router"; // 1. Import useNavigate
+import { Link, redirect, useNavigate } from "react-router"; // 1. Import useNavigate
 import { useDebounceValue } from "usehooks-ts";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 import PaginationSection from "~/components/pagination-section";
@@ -19,7 +19,15 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import useGetEvents from "~/hooks/api/useGetEvents";
+import { useAuth } from "~/stores/useAuth";
 import { formatDate, formatDateShort } from "~/utils/formatter";
+
+export const clientLoader = () => {
+  const user = useAuth.getState().user;
+  if (!user) return redirect("/login");
+};
+
+//dapetin id dari organizer tentukan ticket ini punya id ini ticket ini punya id ini
 
 const MyEvents = () => {
   const navigate = useNavigate();

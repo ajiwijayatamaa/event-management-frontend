@@ -14,11 +14,6 @@ import { axiosInstance } from "~/lib/axios";
 import { loginSchema, type LoginSchema } from "~/schema/login";
 import { useAuth } from "~/stores/useAuth";
 
-export const clientLoader = () => {
-  const user = useAuth.getState().user;
-  if (user) return redirect("/");
-};
-
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
