@@ -10,9 +10,15 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { useAuth } from "~/stores/useAuth";
+
+export const clientLoader = () => {
+  const user = useAuth.getState().user;
+  if (!user) return redirect("/login");
+};
 
 const Dashboard = () => {
   return (
