@@ -1,5 +1,5 @@
 import { ArrowLeft, Sparkles } from "lucide-react";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import { CouponList } from "~/components/layout/coupon-list";
 import { PointHistory } from "~/components/layout/point-history";
 import { ProfileHeader } from "~/components/layout/profile-header";
@@ -7,6 +7,11 @@ import { ReferralBox } from "~/components/layout/refferalbox";
 import { StatsSection } from "~/components/layout/stats-section";
 import useProfile from "~/hooks/api/useProfile";
 import { useAuth } from "~/stores/useAuth";
+
+export const clientLoader = () => {
+  const user = useAuth.getState().user;
+  if (!user) return redirect("/login");
+};
 
 export default function Profile() {
   const { user } = useAuth();
