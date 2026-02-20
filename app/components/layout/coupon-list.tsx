@@ -1,4 +1,4 @@
-import { Calendar, Ticket } from "lucide-react";
+import { Calendar, Sparkles, Ticket } from "lucide-react";
 import type { Coupon } from "~/schema/profile";
 
 export const CouponList = ({ coupons = [] }: { coupons?: Coupon[] }) => {
@@ -6,40 +6,49 @@ export const CouponList = ({ coupons = [] }: { coupons?: Coupon[] }) => {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center gap-2">
-        <Ticket className="h-6 w-6 stroke-[3px]" />
-        <h3 className="text-3xl font-black uppercase font-impact italic tracking-tight">
+        <Ticket className="w-4 h-4 text-orange-400" />
+        <span className="text-orange-400 text-xs font-bold tracking-widest uppercase">
           Voucher Vault
-        </h3>
+        </span>
       </div>
 
-      {/* Container dengan Scroll jika kupon terlalu banyak */}
-      <div className="max-h-[400px] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-[#1a1a1a]">
+      {/* List */}
+      <div className="max-h-[400px] overflow-y-auto space-y-3 pr-1">
         {activeCoupons.length > 0 ? (
           activeCoupons.map((c) => (
             <div
               key={c.id}
-              className="flex border-4 border-[#1a1a1a] bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] group hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] transition-all"
+              className="rounded-2xl overflow-hidden border border-neutral-200 shadow-sm flex"
             >
-              {/* Bagian Diskon (Kiri) */}
-              <div className="bg-[#ffeb3b] w-16 p-2 border-r-4 border-dashed border-[#1a1a1a] flex items-center justify-center">
-                <span className="font-impact text-2xl -rotate-90 whitespace-nowrap">
-                  {Math.floor(Number(c.discountRate))}%
+              {/* Kiri: diskon */}
+              <div className="bg-neutral-900 w-16 flex items-center justify-center shrink-0 relative">
+                {/* Notch atas */}
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-100 rounded-full border border-neutral-200" />
+                {/* Notch bawah */}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-neutral-100 rounded-full border border-neutral-200" />
+                <span className="text-orange-400 font-bold text-sm -rotate-90 whitespace-nowrap tracking-widest">
+                  {Math.floor(Number(c.discountRate))}% OFF
                 </span>
               </div>
 
-              {/* Bagian Info (Kanan) */}
-              <div className="p-3 flex-1 min-w-0">
-                <p className="font-black font-mono uppercase text-sm truncate bg-[#1a1a1a] text-white px-2 py-1 mb-2">
+              {/* Garis perforasi */}
+              <div className="w-px border-l-2 border-dashed border-neutral-200 my-3" />
+
+              {/* Kanan: info */}
+              <div className="bg-white flex-1 px-4 py-3 min-w-0">
+                <p className="text-neutral-900 font-bold text-sm tracking-widest font-mono truncate mb-2">
                   {c.couponCode}
                 </p>
-                <div className="flex items-center gap-1.5 text-[10px] font-black font-mono opacity-70">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>
-                    EXP:{" "}
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3 text-neutral-400" />
+                  <span className="text-neutral-400 text-xs">
+                    Exp:{" "}
                     {new Date(c.expiredAt).toLocaleDateString("id-ID", {
                       day: "2-digit",
                       month: "short",
+                      year: "numeric",
                     })}
                   </span>
                 </div>
@@ -47,17 +56,27 @@ export const CouponList = ({ coupons = [] }: { coupons?: Coupon[] }) => {
             </div>
           ))
         ) : (
-          <div className="border-4 border-dashed border-[#1a1a1a]/20 p-8 text-center">
-            <p className="font-mono font-bold uppercase opacity-30">
-              No Vouchers
+          <div className="rounded-2xl border border-dashed border-neutral-200 p-8 text-center">
+            <Ticket className="w-8 h-8 text-neutral-200 mx-auto mb-2" />
+            <p className="text-neutral-400 text-xs font-semibold uppercase tracking-widest">
+              No Vouchers Available
             </p>
           </div>
         )}
       </div>
 
+      {/* Footer count */}
       {activeCoupons.length > 0 && (
-        <div className="bg-[#1a1a1a] text-[#ffeb3b] text-[10px] font-bold p-1 text-center uppercase italic">
-          {activeCoupons.length} Active Rewards
+        <div className="flex items-center justify-between px-4 py-2.5 bg-neutral-900 rounded-2xl">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+            <span className="text-neutral-400 text-xs font-semibold uppercase tracking-widest">
+              Active Vouchers
+            </span>
+          </div>
+          <span className="text-orange-400 text-xs font-bold">
+            {activeCoupons.length} available
+          </span>
         </div>
       )}
     </div>
