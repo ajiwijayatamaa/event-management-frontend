@@ -183,9 +183,7 @@ const MyEvents = () => {
                         asChild
                         className="h-8 gap-1.5 text-green-600 border-green-200 hover:bg-green-50"
                       >
-                        <Link
-                          to={`/dashboard/events/${event.slug}/participants`}
-                        >
+                        <Link to={`/organizer/events/${event.slug}/attendees`}>
                           <Users size={14} /> Peserta
                         </Link>
                       </Button>

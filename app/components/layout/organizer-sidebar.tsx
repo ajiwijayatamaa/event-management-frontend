@@ -103,7 +103,7 @@ const OrganizerSidebar = () => {
         {/* Footer */}
         <div className="border-t border-border p-2">
           <Link
-            to="/customer/profile"
+            to="/profile"
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
               collapsed && "justify-center px-2",
