@@ -289,7 +289,7 @@ export default function CreateEvent() {
                                 ref={field.ref}
                                 onBlur={field.onBlur}
                                 value={field.value || ""}
-                                placeholder="Masukkan Total Bangku"
+                                placeholder="Isi Total Bangku"
                                 onChange={(e) =>
                                   field.onChange(
                                     e.target.value === ""
