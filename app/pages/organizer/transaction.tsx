@@ -1,69 +1,97 @@
+import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Badge } from "~/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 import { motion } from "framer-motion";
 import {
-  Search,
-  Download,
-  Receipt,
-  DollarSign,
-  TrendingUp,
-  Clock,
   CheckCircle,
+  Clock,
+  DollarSign,
+  Receipt,
+  TrendingUp,
   XCircle,
-  Eye,
 } from "lucide-react";
-import { Link } from "react-router";
-import { mockEvents, mockTransactions, mockUsers } from "~/data/mockdata";
+import { redirect } from "react-router";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
+import useGetTransactions from "~/hooks/api/useGetTransactions";
+import useAcceptTransaction from "~/hooks/api/useAcceptTransaction";
+import useRejectTransaction from "~/hooks/api/useRejectTransaction";
+import { useAuth } from "~/stores/useAuth";
+import { formatDate, formatPrice } from "~/utils/formatter";
+
+export const clientLoader = () => {
+  const user = useAuth.getState().user;
+  if (!user) return redirect("/login");
+};
 
 const Transactions = () => {
-  const transactions = mockTransactions;
+  const { data, isPending, isError } = useGetTransactions();
+  const transactions = data?.data || [];
+
+  const { mutate: acceptTransaction, isPending: isAccepting } =
+    useAcceptTransaction();
+  const { mutate: rejectTransaction, isPending: isRejecting } =
+    useRejectTransaction();
 
   const totalRevenue = transactions
-    .filter((t) => t.status === "confirmed")
-    .reduce((sum, t) => sum + t.totalPrice, 0);
+    .filter((t: any) => t.status === "PAID")
+    .reduce((sum: number, t: any) => sum + Number(t.totalPrice), 0);
 
   const pendingRevenue = transactions
-    .filter((t) => t.status === "pending")
-    .reduce((sum, t) => sum + t.totalPrice, 0);
+    .filter((t: any) => t.status === "PENDING")
+    .reduce((sum: number, t: any) => sum + Number(t.totalPrice), 0);
 
-  const confirmedCount = transactions.filter(
-    (t) => t.status === "confirmed",
-  ).length;
+  const paidCount = transactions.filter((t: any) => t.status === "PAID").length;
   const pendingCount = transactions.filter(
-    (t) => t.status === "pending",
+    (t: any) => t.status === "PENDING",
   ).length;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+  const handleAccept = (id: number) => {
+    acceptTransaction(id);
   };
 
-  const getStatusIcon = (status: string) => {
+  const handleReject = (id: number) => {
+    rejectTransaction(id);
+  };
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "confirmed":
-        return <CheckCircle className="h-4 w-4 text-success" />;
-      case "pending":
-        return <Clock className="h-4 w-4 text-warning" />;
-      case "cancelled":
-        return <XCircle className="h-4 w-4 text-destructive" />;
+      case "PAID":
+        return (
+          <Badge className="flex w-fit items-center gap-1 bg-green-100 text-green-700 hover:bg-green-100">
+            <CheckCircle className="h-3 w-3" /> Diterima
+          </Badge>
+        );
+      case "PENDING":
+        return (
+          <Badge className="flex w-fit items-center gap-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+            <Clock className="h-3 w-3" /> Menunggu
+          </Badge>
+        );
+      case "REJECTED":
+        return (
+          <Badge className="flex w-fit items-center gap-1 bg-red-100 text-red-700 hover:bg-red-100">
+            <XCircle className="h-3 w-3" /> Ditolak
+          </Badge>
+        );
+      case "EXPIRED":
+        return (
+          <Badge className="flex w-fit items-center gap-1 bg-gray-100 text-gray-700 hover:bg-gray-100">
+            <Clock className="h-3 w-3" /> Kadaluarsa
+          </Badge>
+        );
       default:
-        return null;
+        return <Badge>{status}</Badge>;
     }
   };
 
@@ -79,19 +107,11 @@ const Transactions = () => {
             transition={{ duration: 0.5 }}
           >
             {/* Header */}
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <h1 className="font-display text-3xl font-bold">
-                  Transactions
-                </h1>
-                <p className="text-muted-foreground">
-                  View and manage all your event transactions
-                </p>
-              </div>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
+            <div className="mb-8">
+              <h1 className="font-display text-3xl font-bold">Transaksi</h1>
+              <p className="text-muted-foreground">
+                Lihat dan kelola semua transaksi event kamu
+              </p>
             </div>
 
             {/* Stats */}
@@ -99,15 +119,15 @@ const Transactions = () => {
               <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
-                      <DollarSign className="h-6 w-6 text-success" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+                      <DollarSign className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Total Revenue
                       </p>
-                      <p className="font-display text-2xl font-bold">
-                        ${totalRevenue.toLocaleString()}
+                      <p className="text-2xl font-bold">
+                        {formatPrice(totalRevenue)}
                       </p>
                     </div>
                   </div>
@@ -116,15 +136,15 @@ const Transactions = () => {
               <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/10">
-                      <Clock className="h-6 w-6 text-warning" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100">
+                      <Clock className="h-6 w-6 text-yellow-600" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Pending Revenue
                       </p>
-                      <p className="font-display text-2xl font-bold">
-                        ${pendingRevenue.toLocaleString()}
+                      <p className="text-2xl font-bold">
+                        {formatPrice(pendingRevenue)}
                       </p>
                     </div>
                   </div>
@@ -133,14 +153,12 @@ const Transactions = () => {
               <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                      <CheckCircle className="h-6 w-6 text-primary" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                      <CheckCircle className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Confirmed</p>
-                      <p className="font-display text-2xl font-bold">
-                        {confirmedCount}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Diterima</p>
+                      <p className="text-2xl font-bold">{paidCount}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -148,148 +166,229 @@ const Transactions = () => {
               <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                      <TrendingUp className="h-6 w-6 text-accent" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100">
+                      <TrendingUp className="h-6 w-6 text-orange-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Pending</p>
-                      <p className="font-display text-2xl font-bold">
-                        {pendingCount}
-                      </p>
+                      <p className="text-sm text-muted-foreground">Menunggu</p>
+                      <p className="text-2xl font-bold">{pendingCount}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Filters */}
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search transactions..." className="pl-10" />
-              </div>
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by event" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Events</SelectItem>
-                  {mockEvents.map((event) => (
-                    <SelectItem key={event.id} value={event.id}>
-                      {event.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Transactions Table */}
+            {/* Tabel Transaksi */}
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Receipt className="h-5 w-5 text-primary" />
-                  All Transactions
+                  Semua Transaksi
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border text-left text-sm text-muted-foreground">
-                        <th className="pb-3 font-medium">Transaction ID</th>
-                        <th className="pb-3 font-medium">Customer</th>
-                        <th className="pb-3 font-medium">Event</th>
-                        <th className="pb-3 font-medium">Tickets</th>
-                        <th className="pb-3 font-medium">Amount</th>
-                        <th className="pb-3 font-medium">Status</th>
-                        <th className="pb-3 font-medium">Date</th>
-                        <th className="pb-3 font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {transactions.map((transaction) => {
-                        const event = mockEvents.find(
-                          (e) => e.id === transaction.eventId,
-                        );
-                        const user = mockUsers.find(
-                          (u) => u.id === transaction.userId,
-                        );
-                        return (
+                {isPending && (
+                  <div className="py-20 text-center text-muted-foreground animate-pulse">
+                    Memuat data transaksi...
+                  </div>
+                )}
+
+                {isError && (
+                  <div className="py-20 text-center text-destructive">
+                    Gagal mengambil data transaksi.
+                  </div>
+                )}
+
+                {!isPending && transactions.length === 0 && (
+                  <div className="py-20 text-center text-muted-foreground">
+                    Belum ada transaksi.
+                  </div>
+                )}
+
+                {!isPending && transactions.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border text-left text-sm text-muted-foreground">
+                          <th className="pb-3 font-medium">ID</th>
+                          <th className="pb-3 font-medium">Customer</th>
+                          <th className="pb-3 font-medium">Event</th>
+                          <th className="pb-3 font-medium">Tiket</th>
+                          <th className="pb-3 font-medium">Total</th>
+                          <th className="pb-3 font-medium">Status</th>
+                          <th className="pb-3 font-medium">Bukti Bayar</th>
+                          <th className="pb-3 font-medium">Tanggal</th>
+                          <th className="pb-3 font-medium">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {transactions.map((transaction: any) => (
                           <tr key={transaction.id} className="text-sm">
                             <td className="py-4 font-mono">
                               #{transaction.id}
                             </td>
+
                             <td className="py-4">
                               <div>
                                 <p className="font-medium">
-                                  {user?.name || "Unknown"}
+                                  {transaction.user?.name || "-"}
                                 </p>
-                                <p className="text-muted-foreground">
-                                  {user?.email}
+                                <p className="text-xs text-muted-foreground">
+                                  {transaction.user?.email}
                                 </p>
                               </div>
                             </td>
-                            <td className="py-4">
-                              <Link
-                                to={`/events/${event?.id}`}
-                                className="font-medium hover:text-primary transition-colors"
-                              >
-                                {event?.name || "Unknown"}
-                              </Link>
+
+                            <td className="py-4 font-medium">
+                              {transaction.event?.name || "-"}
                             </td>
+
                             <td className="py-4">
                               {transaction.ticketQuantity}
                             </td>
+
                             <td className="py-4 font-semibold">
-                              ${transaction.totalPrice}
+                              {formatPrice(Number(transaction.totalPrice))}
                             </td>
+
                             <td className="py-4">
-                              <Badge
-                                className={`flex w-fit items-center gap-1 ${
-                                  transaction.status === "confirmed"
-                                    ? "bg-success/10 text-success"
-                                    : transaction.status === "pending"
-                                      ? "bg-warning/10 text-warning"
-                                      : "bg-destructive/10 text-destructive"
-                                }`}
-                              >
-                                {getStatusIcon(transaction.status)}
-                                {transaction.status.charAt(0).toUpperCase() +
-                                  transaction.status.slice(1)}
-                              </Badge>
+                              {getStatusBadge(transaction.status)}
                             </td>
-                            <td className="py-4 text-muted-foreground">
+
+                            <td className="py-4">
+                              {transaction.paymentProof ? (
+                                <a
+                                  href={transaction.paymentProof}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <img
+                                    src={transaction.paymentProof}
+                                    alt="Bukti Bayar"
+                                    className="h-12 w-16 cursor-pointer rounded-md border border-border object-cover transition-opacity hover:opacity-80"
+                                  />
+                                </a>
+                              ) : (
+                                <span className="text-xs italic text-muted-foreground">
+                                  Belum diupload
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-4 text-xs text-muted-foreground">
                               {formatDate(transaction.createdAt)}
                             </td>
+
+                            {/* Aksi */}
                             <td className="py-4">
-                              <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                {transaction.status === "pending" && (
-                                  <Button variant="ghost" size="sm">
-                                    Confirm
-                                  </Button>
-                                )}
-                              </div>
+                              {transaction.status === "PENDING" && (
+                                <div className="flex items-center gap-2">
+                                  {/* Dialog Accept */}
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        className="h-8 bg-green-600 text-white hover:bg-green-700"
+                                        disabled={isAccepting || isRejecting}
+                                      >
+                                        <CheckCircle className="mr-1 h-3 w-3" />
+                                        Accept
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          Terima Transaksi
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Apakah kamu yakin ingin menerima
+                                          transaksi{" "}
+                                          <span className="font-semibold text-foreground">
+                                            #{transaction.id}
+                                          </span>{" "}
+                                          dari{" "}
+                                          <span className="font-semibold text-foreground">
+                                            {transaction.user?.name}
+                                          </span>
+                                          ? Status akan berubah menjadi{" "}
+                                          <span className="font-semibold text-green-600">
+                                            Diterima
+                                          </span>
+                                          .
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          Batal
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-green-600 hover:bg-green-700"
+                                          onClick={() =>
+                                            handleAccept(transaction.id)
+                                          }
+                                        >
+                                          Ya, Terima
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+
+                                  {/* Dialog Reject */}
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 border-red-200 text-red-600 hover:bg-red-50"
+                                        disabled={isAccepting || isRejecting}
+                                      >
+                                        <XCircle className="mr-1 h-3 w-3" />
+                                        Reject
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          Tolak Transaksi
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Apakah kamu yakin ingin menolak
+                                          transaksi{" "}
+                                          <span className="font-semibold text-foreground">
+                                            #{transaction.id}
+                                          </span>{" "}
+                                          dari{" "}
+                                          <span className="font-semibold text-foreground">
+                                            {transaction.user?.name}
+                                          </span>
+                                          ? Semua poin, voucher, dan kursi akan
+                                          dikembalikan.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          Batal
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-destructive hover:bg-destructive/90"
+                                          onClick={() =>
+                                            handleReject(transaction.id)
+                                          }
+                                        >
+                                          Ya, Tolak
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              )}
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
