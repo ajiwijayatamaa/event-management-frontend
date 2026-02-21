@@ -281,11 +281,22 @@ export default function CreateEvent() {
                             <div className="relative">
                               <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                               <Input
-                                {...field}
                                 id="totalSeats"
                                 type="number"
                                 className="pl-10"
                                 aria-invalid={fieldState.invalid}
+                                name={field.name}
+                                ref={field.ref}
+                                onBlur={field.onBlur}
+                                value={field.value || ""}
+                                placeholder="Isi Total Bangku"
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ""
+                                      ? 0
+                                      : Number(e.target.value),
+                                  )
+                                }
                               />
                             </div>
                             <p className="text-[10px] text-muted-foreground italic mt-1">
