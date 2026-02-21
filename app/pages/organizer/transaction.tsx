@@ -35,6 +35,71 @@ export const clientLoader = () => {
   if (user.role !== "ORGANIZER") return redirect("/");
 };
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "PAID":
+      return (
+        <Badge className="flex w-fit items-center gap-1 bg-green-100 text-green-700 hover:bg-green-100 font-black uppercase text-[10px] tracking-wider rounded-full">
+          <CheckCircle className="h-3 w-3" /> Diterima
+        </Badge>
+      );
+    case "PENDING":
+      return (
+        <Badge className="flex w-fit items-center gap-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 font-black uppercase text-[10px] tracking-wider rounded-full">
+          <Clock className="h-3 w-3" /> Menunggu
+        </Badge>
+      );
+    case "REJECTED":
+      return (
+        <Badge className="flex w-fit items-center gap-1 bg-red-100 text-red-700 hover:bg-red-100 font-black uppercase text-[10px] tracking-wider rounded-full">
+          <XCircle className="h-3 w-3" /> Ditolak
+        </Badge>
+      );
+    case "EXPIRED":
+      return (
+        <Badge className="flex w-fit items-center gap-1 bg-zinc-100 text-zinc-500 hover:bg-zinc-100 font-black uppercase text-[10px] tracking-wider rounded-full">
+          <Clock className="h-3 w-3" /> Kadaluarsa
+        </Badge>
+      );
+    default:
+      return <Badge>{status}</Badge>;
+  }
+};
+
+const statCards = (
+  totalRevenue: number,
+  pendingRevenue: number,
+  paidCount: number,
+  pendingCount: number,
+) => [
+  {
+    label: "Total Revenue",
+    value: formatPrice(totalRevenue),
+    icon: <DollarSign className="h-5 w-5 text-green-600" />,
+    bg: "bg-green-100",
+  },
+  {
+    label: "Pending Revenue",
+    value: formatPrice(pendingRevenue),
+    icon: <Clock className="h-5 w-5 text-yellow-600" />,
+    bg: "bg-yellow-100",
+  },
+  {
+    label: "Diterima",
+    value: paidCount,
+    icon: <CheckCircle className="h-5 w-5 text-orange-500" />,
+    bg: "bg-orange-100",
+  },
+  {
+    label: "Menunggu",
+    value: pendingCount,
+    icon: <TrendingUp className="h-5 w-5 text-zinc-600" />,
+    bg: "bg-zinc-100",
+  },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const Transactions = () => {
   const { data, isPending, isError } = useGetTransactions();
   const transactions = data?.data || [];
@@ -57,206 +122,178 @@ const Transactions = () => {
     (t: any) => t.status === "PENDING",
   ).length;
 
-  const handleAccept = (id: number) => {
-    acceptTransaction(id);
-  };
-
-  const handleReject = (id: number) => {
-    rejectTransaction(id);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "PAID":
-        return (
-          <Badge className="flex w-fit items-center gap-1 bg-green-100 text-green-700 hover:bg-green-100">
-            <CheckCircle className="h-3 w-3" /> Diterima
-          </Badge>
-        );
-      case "PENDING":
-        return (
-          <Badge className="flex w-fit items-center gap-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-            <Clock className="h-3 w-3" /> Menunggu
-          </Badge>
-        );
-      case "REJECTED":
-        return (
-          <Badge className="flex w-fit items-center gap-1 bg-red-100 text-red-700 hover:bg-red-100">
-            <XCircle className="h-3 w-3" /> Ditolak
-          </Badge>
-        );
-      case "EXPIRED":
-        return (
-          <Badge className="flex w-fit items-center gap-1 bg-gray-100 text-gray-700 hover:bg-gray-100">
-            <Clock className="h-3 w-3" /> Kadaluarsa
-          </Badge>
-        );
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
+  const handleAccept = (id: number) => acceptTransaction(id);
+  const handleReject = (id: number) => rejectTransaction(id);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-zinc-50/50">
       <OrganizerSidebar />
 
-      <main className="flex-1 bg-background">
-        <div className="p-8">
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-6 lg:p-10 max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
           >
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="font-display text-3xl font-bold">Transaksi</h1>
-              <p className="text-muted-foreground">
-                Lihat dan kelola semua transaksi event kamu
+            {/* ── Header ───────────────────────────────────────────────── */}
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-2">
+                <Receipt className="w-4 h-4 text-orange-500" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
+                  Manajemen Keuangan
+                </span>
+              </div>
+              <h1 className="text-4xl font-black tracking-tighter text-zinc-900 uppercase italic">
+                Semua <span className="text-orange-500">Transaksi</span>
+              </h1>
+              <p className="text-zinc-500 text-sm font-medium mt-1">
+                Lihat dan kelola semua transaksi event kamu.
               </p>
             </div>
 
-            {/* Stats */}
+            {/* ── Stat Cards ───────────────────────────────────────────── */}
             <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
-                      <DollarSign className="h-6 w-6 text-green-600" />
+              {statCards(
+                totalRevenue,
+                pendingRevenue,
+                paidCount,
+                pendingCount,
+              ).map((stat) => (
+                <Card
+                  key={stat.label}
+                  className="border-none shadow-sm rounded-[1.5rem] bg-white overflow-hidden"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`flex h-11 w-11 items-center justify-center rounded-2xl ${stat.bg}`}
+                      >
+                        {stat.icon}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                          {stat.label}
+                        </p>
+                        <p className="text-xl font-black italic tracking-tight text-zinc-900">
+                          {stat.value}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Total Revenue
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {formatPrice(totalRevenue)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100">
-                      <Clock className="h-6 w-6 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Pending Revenue
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {formatPrice(pendingRevenue)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
-                      <CheckCircle className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Diterima</p>
-                      <p className="text-2xl font-bold">{paidCount}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100">
-                      <TrendingUp className="h-6 w-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Menunggu</p>
-                      <p className="text-2xl font-bold">{pendingCount}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
-            {/* Tabel Transaksi */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5 text-primary" />
-                  Semua Transaksi
+            {/* ── Transaction Table ─────────────────────────────────────── */}
+            <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+              <CardHeader className="border-b border-zinc-50 bg-zinc-50/30">
+                <CardTitle className="flex items-center gap-3 text-zinc-900 font-black uppercase italic text-lg tracking-tight">
+                  <Receipt className="h-5 w-5 text-orange-500" />
+                  Daftar Transaksi
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
+                {/* Loading */}
                 {isPending && (
-                  <div className="py-20 text-center text-muted-foreground animate-pulse">
+                  <div className="py-24 text-center text-sm font-medium text-zinc-400 animate-pulse">
                     Memuat data transaksi...
                   </div>
                 )}
 
+                {/* Error */}
                 {isError && (
-                  <div className="py-20 text-center text-destructive">
+                  <div className="py-24 text-center text-sm font-bold text-red-500">
                     Gagal mengambil data transaksi.
                   </div>
                 )}
 
+                {/* Empty */}
                 {!isPending && transactions.length === 0 && (
-                  <div className="py-20 text-center text-muted-foreground">
+                  <div className="py-24 text-center text-sm font-medium text-zinc-400">
                     Belum ada transaksi.
                   </div>
                 )}
 
+                {/* Table */}
                 {!isPending && transactions.length > 0 && (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-border text-left text-sm text-muted-foreground">
-                          <th className="pb-3 font-medium">ID</th>
-                          <th className="pb-3 font-medium">Customer</th>
-                          <th className="pb-3 font-medium">Event</th>
-                          <th className="pb-3 font-medium">Tiket</th>
-                          <th className="pb-3 font-medium">Total</th>
-                          <th className="pb-3 font-medium">Status</th>
-                          <th className="pb-3 font-medium">Bukti Bayar</th>
-                          <th className="pb-3 font-medium">Tanggal</th>
-                          <th className="pb-3 font-medium">Aksi</th>
+                        <tr className="border-b border-zinc-100 text-left">
+                          <th className="px-8 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            ID
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Customer
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Event
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Tiket
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Total
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Status
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Bukti
+                          </th>
+                          <th className="px-4 pb-4 pt-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Tanggal
+                          </th>
+                          <th className="px-4 pb-4 pt-6 pr-8 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            Aksi
+                          </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border">
+                      <tbody className="divide-y divide-zinc-50">
                         {transactions.map((transaction: any) => (
-                          <tr key={transaction.id} className="text-sm">
-                            <td className="py-4 font-mono">
-                              #{transaction.id}
+                          <tr
+                            key={transaction.id}
+                            className="text-sm hover:bg-zinc-50/50 transition-colors"
+                          >
+                            <td className="px-8 py-5">
+                              <span className="font-mono text-xs font-bold text-zinc-400">
+                                #{transaction.id}
+                              </span>
                             </td>
 
-                            <td className="py-4">
-                              <div>
-                                <p className="font-medium">
-                                  {transaction.user?.name || "-"}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {transaction.user?.email}
-                                </p>
-                              </div>
+                            <td className="px-4 py-5">
+                              <p className="font-bold text-zinc-900 text-sm">
+                                {transaction.user?.name || "-"}
+                              </p>
+                              <p className="text-[11px] text-zinc-400 font-medium">
+                                {transaction.user?.email}
+                              </p>
                             </td>
 
-                            <td className="py-4 font-medium">
-                              {transaction.event?.name || "-"}
+                            <td className="px-4 py-5">
+                              <p className="font-bold text-zinc-900 text-sm max-w-[160px] truncate">
+                                {transaction.event?.name || "-"}
+                              </p>
                             </td>
 
-                            <td className="py-4">
-                              {transaction.ticketQuantity}
+                            <td className="px-4 py-5">
+                              <span className="font-black italic text-zinc-700">
+                                {transaction.ticketQuantity}
+                              </span>
                             </td>
 
-                            <td className="py-4 font-semibold">
-                              {formatPrice(Number(transaction.totalPrice))}
+                            <td className="px-4 py-5">
+                              <span className="font-black italic text-zinc-900 text-sm">
+                                {formatPrice(Number(transaction.totalPrice))}
+                              </span>
                             </td>
 
-                            <td className="py-4">
+                            <td className="px-4 py-5">
                               {getStatusBadge(transaction.status)}
                             </td>
 
-                            <td className="py-4">
+                            <td className="px-4 py-5">
                               {transaction.paymentProof ? (
                                 <a
                                   href={transaction.paymentProof}
@@ -266,22 +303,23 @@ const Transactions = () => {
                                   <img
                                     src={transaction.paymentProof}
                                     alt="Bukti Bayar"
-                                    className="h-12 w-16 cursor-pointer rounded-md border border-border object-cover transition-opacity hover:opacity-80"
+                                    className="h-12 w-16 cursor-pointer rounded-xl border border-zinc-100 object-cover transition-opacity hover:opacity-75"
                                   />
                                 </a>
                               ) : (
-                                <span className="text-xs italic text-muted-foreground">
+                                <span className="text-[10px] italic font-medium text-zinc-300">
                                   Belum diupload
                                 </span>
                               )}
                             </td>
 
-                            <td className="py-4 text-xs text-muted-foreground">
-                              {formatDate(transaction.createdAt)}
+                            <td className="px-4 py-5">
+                              <span className="text-[11px] font-medium text-zinc-400">
+                                {formatDate(transaction.createdAt)}
+                              </span>
                             </td>
 
-                            {/* Aksi */}
-                            <td className="py-4">
+                            <td className="px-4 py-5 pr-8">
                               {transaction.status === "PENDING" && (
                                 <div className="flex items-center gap-2">
                                   {/* Dialog Accept */}
@@ -289,16 +327,16 @@ const Transactions = () => {
                                     <AlertDialogTrigger asChild>
                                       <Button
                                         size="sm"
-                                        className="h-8 bg-green-600 text-white hover:bg-green-700"
+                                        className="h-8 rounded-xl bg-zinc-900 text-white hover:bg-black font-black uppercase text-[10px] tracking-wider px-3"
                                         disabled={isAccepting || isRejecting}
                                       >
-                                        <CheckCircle className="mr-1 h-3 w-3" />
-                                        Accept
+                                        <CheckCircle className="mr-1 h-3 w-3 text-orange-500" />
+                                        Terima
                                       </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent>
+                                    <AlertDialogContent className="rounded-2xl">
                                       <AlertDialogHeader>
-                                        <AlertDialogTitle>
+                                        <AlertDialogTitle className="font-black uppercase italic tracking-tight">
                                           Terima Transaksi
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
@@ -319,11 +357,11 @@ const Transactions = () => {
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel>
+                                        <AlertDialogCancel className="rounded-xl">
                                           Batal
                                         </AlertDialogCancel>
                                         <AlertDialogAction
-                                          className="bg-green-600 hover:bg-green-700"
+                                          className="rounded-xl bg-zinc-900 hover:bg-black font-black"
                                           onClick={() =>
                                             handleAccept(transaction.id)
                                           }
@@ -340,16 +378,16 @@ const Transactions = () => {
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-8 border-red-200 text-red-600 hover:bg-red-50"
+                                        className="h-8 rounded-xl border-zinc-200 text-zinc-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50 font-black uppercase text-[10px] tracking-wider px-3 transition-colors"
                                         disabled={isAccepting || isRejecting}
                                       >
                                         <XCircle className="mr-1 h-3 w-3" />
-                                        Reject
+                                        Tolak
                                       </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent>
+                                    <AlertDialogContent className="rounded-2xl">
                                       <AlertDialogHeader>
-                                        <AlertDialogTitle>
+                                        <AlertDialogTitle className="font-black uppercase italic tracking-tight">
                                           Tolak Transaksi
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
@@ -367,11 +405,11 @@ const Transactions = () => {
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel>
+                                        <AlertDialogCancel className="rounded-xl">
                                           Batal
                                         </AlertDialogCancel>
                                         <AlertDialogAction
-                                          className="bg-destructive hover:bg-destructive/90"
+                                          className="rounded-xl bg-destructive hover:bg-destructive/90 font-black"
                                           onClick={() =>
                                             handleReject(transaction.id)
                                           }
