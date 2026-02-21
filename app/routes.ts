@@ -13,7 +13,7 @@ export default [
   route("/organizer/events/edit/:slug", "pages/organizer/edit-event.tsx"),
   route("/organizer/transactions", "pages/organizer/transaction.tsx"),
   route(
-    "/organizer/events/:id/attendees",
+    "/organizer/events/:slug/attendees",
     "pages/organizer/event-attendees.tsx",
   ),
   route("/forgot-password", "pages/forgot-password.tsx"),

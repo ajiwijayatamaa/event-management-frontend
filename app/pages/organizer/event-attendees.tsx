@@ -1,67 +1,39 @@
-import { useParams, Link } from "react-router";
+import { motion } from "framer-motion";
+import { ArrowLeft, Search, Ticket, Users } from "lucide-react";
+import { redirect, Link, useParams } from "react-router";
+import { useQueryState } from "nuqs";
+import { useDebounceValue } from "usehooks-ts";
+import OrganizerSidebar from "~/components/layout/organizer-sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
-import { Badge } from "~/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import useGetAttendees from "~/hooks/api/useGetAttendees";
+import { useAuth } from "~/stores/useAuth";
+import { formatDate, formatPrice } from "~/utils/formatter";
 
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Search,
-  Download,
-  Users,
-  Mail,
-  Ticket,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
-import {
-  getEventById,
-  getTransactionsByEventId,
-  mockUsers,
-} from "~/data/mockdata";
-import OrganizerSidebar from "~/components/layout/organizer-sidebar";
+export const clientLoader = () => {
+  const user = useAuth.getState().user;
+  if (!user) return redirect("/login");
+};
 
 const EventAttendees = () => {
-  const { id } = useParams<{ id: string }>();
-  const event = getEventById(id || "");
-  const transactions = getTransactionsByEventId(id || "");
+  const { slug } = useParams<{ slug: string }>();
 
-  if (!event) {
-    return (
-      <div className="flex min-h-screen">
-        <OrganizerSidebar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">Event not found</h1>
-            <Button asChild className="mt-4">
-              <Link to="/organizer/events">Back to Events</Link>
-            </Button>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  const [search, setSearch] = useQueryState("search", { defaultValue: "" });
+  const [debouncedValue] = useDebounceValue(search, 500);
 
-  const confirmedAttendees = transactions.filter(
-    (t) => t.status === "confirmed",
+  const { data, isPending, isError } = useGetAttendees(slug || "");
+
+  const attendees = data?.data || [];
+  const meta = data?.meta;
+
+  // Filter attendees berdasarkan search (client-side)
+  const filteredAttendees = attendees.filter(
+    (a: any) =>
+      a.user?.name?.toLowerCase().includes(debouncedValue.toLowerCase()) ||
+      a.user?.email?.toLowerCase().includes(debouncedValue.toLowerCase()),
   );
-  const pendingAttendees = transactions.filter((t) => t.status === "pending");
-  const totalTicketsSold = confirmedAttendees.reduce(
-    (sum, t) => sum + t.ticketQuantity,
-    0,
-  );
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <div className="flex min-h-screen">
@@ -79,67 +51,50 @@ const EventAttendees = () => {
               <Button variant="ghost" asChild className="mb-4">
                 <Link to="/organizer/events">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Events
+                  Kembali ke Events
                 </Link>
               </Button>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="font-display text-3xl font-bold">
-                    Event Attendees
-                  </h1>
-                  <p className="text-muted-foreground">{event.name}</p>
-                </div>
-                <Button variant="outline">
-                  <Download className="mr-2 h-4 w-4" />
-                  Export CSV
-                </Button>
+              <div>
+                <h1 className="font-display text-3xl font-bold">
+                  Daftar Peserta
+                </h1>
+                <p className="text-muted-foreground">
+                  {meta?.eventName || slug}
+                </p>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="mb-8 grid gap-4 sm:grid-cols-3">
+            <div className="mb-8 grid gap-4 sm:grid-cols-2">
               <Card className="border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
-                      <CheckCircle className="h-6 w-6 text-success" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Confirmed</p>
-                      <p className="font-display text-2xl font-bold">
-                        {confirmedAttendees.length}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/10">
-                      <Clock className="h-6 w-6 text-warning" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Pending</p>
-                      <p className="font-display text-2xl font-bold">
-                        {pendingAttendees.length}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-border/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                      <Ticket className="h-6 w-6 text-primary" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                      <Users className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Tickets Sold
+                        Total Peserta
                       </p>
-                      <p className="font-display text-2xl font-bold">
-                        {totalTicketsSold}
+                      <p className="text-2xl font-bold">
+                        {meta?.totalAttendees ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-border/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
+                      <Ticket className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Total Tiket Terjual
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {meta?.totalTickets ?? 0}
                       </p>
                     </div>
                   </div>
@@ -148,105 +103,108 @@ const EventAttendees = () => {
             </div>
 
             {/* Search */}
-            <div className="mb-6 flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search attendees..." className="pl-10" />
-              </div>
+            <div className="mb-6 relative max-w-md group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
+              <Input
+                className="pl-10 border-border/60 focus-visible:ring-blue-600"
+                type="text"
+                placeholder="Cari peserta..."
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+              />
             </div>
 
-            {/* Attendees List */}
+            {/* Tabel Peserta */}
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-primary" />
-                  Attendees List
+                  Daftar Peserta
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {transactions.length > 0 ? (
+                {/* Loading State */}
+                {isPending && (
+                  <div className="py-20 text-center text-muted-foreground animate-pulse">
+                    Memuat data peserta...
+                  </div>
+                )}
+
+                {/* Error State */}
+                {isError && (
+                  <div className="py-20 text-center text-destructive">
+                    Gagal mengambil data peserta.
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!isPending && filteredAttendees.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 font-semibold">Belum ada peserta</h3>
+                    <p className="mt-2 text-muted-foreground">
+                      Peserta akan muncul di sini setelah tiket dibeli.
+                    </p>
+                  </div>
+                )}
+
+                {/* Tabel */}
+                {!isPending && filteredAttendees.length > 0 && (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border text-left text-sm text-muted-foreground">
-                          <th className="pb-3 font-medium">Attendee</th>
+                          <th className="pb-3 font-medium">Peserta</th>
                           <th className="pb-3 font-medium">Order ID</th>
-                          <th className="pb-3 font-medium">Tickets</th>
-                          <th className="pb-3 font-medium">Amount</th>
-                          <th className="pb-3 font-medium">Status</th>
-                          <th className="pb-3 font-medium">Date</th>
-                          <th className="pb-3 font-medium">Actions</th>
+                          <th className="pb-3 font-medium">Tiket</th>
+                          <th className="pb-3 font-medium">Total</th>
+                          <th className="pb-3 font-medium">Tanggal</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {transactions.map((transaction) => {
-                          const user = mockUsers.find(
-                            (u) => u.id === transaction.userId,
-                          );
-                          return (
-                            <tr key={transaction.id} className="text-sm">
-                              <td className="py-4">
-                                <div className="flex items-center gap-3">
-                                  <Avatar className="h-10 w-10">
-                                    <AvatarImage src={user?.profilePicture} />
-                                    <AvatarFallback>
-                                      {user?.name.charAt(0) || "U"}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <p className="font-medium">
-                                      {user?.name || "Unknown"}
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                      {user?.email}
-                                    </p>
-                                  </div>
+                        {filteredAttendees.map((attendee: any) => (
+                          <tr key={attendee.id} className="text-sm">
+                            {/* Peserta */}
+                            <td className="py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage
+                                    src={attendee.user?.profilePicture}
+                                  />
+                                  <AvatarFallback>
+                                    {attendee.user?.name?.charAt(0) || "U"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium">
+                                    {attendee.user?.name || "-"}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {attendee.user?.email}
+                                  </p>
                                 </div>
-                              </td>
-                              <td className="py-4 font-mono">
-                                #{transaction.id}
-                              </td>
-                              <td className="py-4">
-                                {transaction.ticketQuantity}
-                              </td>
-                              <td className="py-4 font-medium">
-                                ${transaction.totalPrice}
-                              </td>
-                              <td className="py-4">
-                                <Badge
-                                  className={
-                                    transaction.status === "confirmed"
-                                      ? "bg-success/10 text-success"
-                                      : transaction.status === "pending"
-                                        ? "bg-warning/10 text-warning"
-                                        : "bg-destructive/10 text-destructive"
-                                  }
-                                >
-                                  {transaction.status.charAt(0).toUpperCase() +
-                                    transaction.status.slice(1)}
-                                </Badge>
-                              </td>
-                              <td className="py-4 text-muted-foreground">
-                                {formatDate(transaction.createdAt)}
-                              </td>
-                              <td className="py-4">
-                                <Button variant="ghost" size="sm">
-                                  <Mail className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                              </div>
+                            </td>
+
+                            {/* Order ID */}
+                            <td className="py-4 font-mono">#{attendee.id}</td>
+
+                            {/* Tiket */}
+                            <td className="py-4">{attendee.ticketQuantity}</td>
+
+                            {/* Total */}
+                            <td className="py-4 font-semibold">
+                              {formatPrice(Number(attendee.totalPrice))}
+                            </td>
+
+                            {/* Tanggal */}
+                            <td className="py-4 text-xs text-muted-foreground">
+                              {formatDate(attendee.createdAt)}
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
-                  </div>
-                ) : (
-                  <div className="py-12 text-center">
-                    <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 font-semibold">No attendees yet</h3>
-                    <p className="mt-2 text-muted-foreground">
-                      Attendees will appear here once tickets are purchased.
-                    </p>
                   </div>
                 )}
               </CardContent>
