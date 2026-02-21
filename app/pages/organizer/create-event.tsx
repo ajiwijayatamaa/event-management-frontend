@@ -7,10 +7,11 @@ import {
   MapPin,
   Save,
   Users,
+  Sparkles,
+  Ticket,
 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, redirect } from "react-router";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -24,6 +25,7 @@ import {
 } from "~/schema/create-event";
 import { useAuth } from "~/stores/useAuth";
 import OrganizerSidebar from "~/components/layout/organizer-sidebar";
+import { cn } from "~/lib/utils";
 
 export const clientLoader = () => {
   const user = useAuth.getState().user;
@@ -32,7 +34,6 @@ export const clientLoader = () => {
 };
 
 export default function CreateEvent() {
-  // Default values untuk form
   const today = new Date().toISOString().split("T")[0];
 
   const form = useForm<CreateEventSchema>({
@@ -56,29 +57,38 @@ export default function CreateEvent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-zinc-50/50">
       <OrganizerSidebar />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="p-6 lg:p-10 max-w-6xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
           >
             {/* Header */}
-            <div className="mb-8">
-              <Button variant="ghost" asChild className="mb-4 -ml-2">
+            <div className="mb-10">
+              <Button
+                variant="ghost"
+                asChild
+                className="mb-6 -ml-2 text-zinc-500 hover:text-zinc-900 font-bold uppercase text-[10px] tracking-widest"
+              >
                 <Link to="/organizer/events">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Events
+                  <ArrowLeft className="mr-2 h-3 w-3" /> Back to Events
                 </Link>
               </Button>
-              <h1 className="font-display text-3xl font-bold tracking-tight">
-                Create New Event
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-orange-500" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
+                  Event Publisher
+                </span>
+              </div>
+              <h1 className="text-4xl font-black tracking-tighter text-zinc-900 uppercase italic">
+                Buat <span className="text-orange-500">Event Baru</span>
               </h1>
-              <p className="text-muted-foreground">
-                Fill in the details to publish your event to the platform.
+              <p className="text-zinc-500 text-sm font-medium mt-1">
+                Lengkapi detail di bawah untuk mempublikasikan acara Anda.
               </p>
             </div>
 
@@ -90,28 +100,28 @@ export default function CreateEvent() {
             >
               <div className="grid gap-8 lg:grid-cols-3">
                 {/* Main Content (Left) */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-8">
                   {/* Basic Information */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        Event Information
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                    <CardHeader className="border-b border-zinc-50 bg-zinc-50/30">
+                      <CardTitle className="flex items-center gap-3 text-zinc-900 font-black uppercase italic text-lg tracking-tight">
+                        <FileText className="h-5 w-5 text-orange-500" />
+                        Informasi Dasar
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Name */}
+                    <CardContent className="p-8 space-y-6">
                       <Controller
                         name="name"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="name">Event Name *</FieldLabel>
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Nama Event *
+                            </FieldLabel>
                             <Input
                               {...field}
-                              id="name"
-                              aria-invalid={fieldState.invalid}
-                              placeholder="Enter event name"
+                              className="h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold tracking-tight"
+                              placeholder="Contoh: Konser Musik Jazz Tahunan"
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -120,21 +130,18 @@ export default function CreateEvent() {
                         )}
                       />
 
-                      {/* Description */}
                       <Controller
                         name="description"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="description">
-                              Description
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Deskripsi Event
                             </FieldLabel>
                             <Textarea
                               {...field}
-                              id="description"
-                              aria-invalid={fieldState.invalid}
-                              placeholder="Tell people what this event is about..."
-                              rows={8}
+                              className="rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-medium min-h-[200px]"
+                              placeholder="Ceritakan detail menarik tentang acara Anda..."
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -143,21 +150,20 @@ export default function CreateEvent() {
                         )}
                       />
 
-                      {/* Location */}
                       <Controller
                         name="location"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="location">Location</FieldLabel>
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Lokasi Venue
+                            </FieldLabel>
                             <div className="relative">
-                              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-orange-500" />
                               <Input
                                 {...field}
-                                id="location"
-                                aria-invalid={fieldState.invalid}
-                                placeholder="Physical venue or link"
-                                className="pl-10"
+                                className="pl-12 h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold"
+                                placeholder="Gedung, Kota, atau Link Zoom"
                               />
                             </div>
                             {fieldState.invalid && (
@@ -170,28 +176,26 @@ export default function CreateEvent() {
                   </Card>
 
                   {/* Schedule */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        Schedule
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                    <CardHeader className="border-b border-zinc-50 bg-zinc-50/30">
+                      <CardTitle className="flex items-center gap-3 text-zinc-900 font-black uppercase italic text-lg tracking-tight">
+                        <Calendar className="h-5 w-5 text-orange-500" />
+                        Waktu & Jadwal
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-4 sm:grid-cols-2">
-                      {/* Start Date */}
+                    <CardContent className="p-8 grid gap-6 sm:grid-cols-2">
                       <Controller
                         name="startDate"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="startDate">
-                              Start Date & Time *
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Waktu Mulai *
                             </FieldLabel>
                             <Input
                               {...field}
-                              id="startDate"
                               type="datetime-local"
-                              aria-invalid={fieldState.invalid}
+                              className="h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold uppercase text-[11px]"
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -200,20 +204,18 @@ export default function CreateEvent() {
                         )}
                       />
 
-                      {/* End Date */}
                       <Controller
                         name="endDate"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="endDate">
-                              End Date & Time *
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Waktu Selesai *
                             </FieldLabel>
                             <Input
                               {...field}
-                              id="endDate"
                               type="datetime-local"
-                              aria-invalid={fieldState.invalid}
+                              className="h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold uppercase text-[11px]"
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -226,34 +228,34 @@ export default function CreateEvent() {
                 </div>
 
                 {/* Sidebar (Right) */}
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {/* Ticket Setting */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Ticket Setting</CardTitle>
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden relative">
+                    <div className="absolute top-1/2 -left-3 w-6 h-6 bg-zinc-50 rounded-full border border-zinc-100 -translate-y-1/2" />
+                    <CardHeader className="bg-zinc-900 text-white">
+                      <CardTitle className="text-sm font-black uppercase tracking-widest italic flex items-center gap-2">
+                        <Ticket className="w-4 h-4 text-orange-500" />
+                        Pengaturan Tiket
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Price */}
+                    <CardContent className="p-6 space-y-6 mt-4">
                       <Controller
                         name="price"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="price">Price (Rp)</FieldLabel>
+                            <FieldLabel className="text-[10px] font-black uppercase text-zinc-400">
+                              Harga (IDR)
+                            </FieldLabel>
                             <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-orange-600 italic">
                                 Rp
                               </span>
                               <Input
-                                id="price"
                                 type="number"
-                                className="pl-10"
-                                aria-invalid={fieldState.invalid}
-                                name={field.name}
-                                ref={field.ref}
-                                onBlur={field.onBlur}
+                                className="pl-12 h-12 rounded-xl border-zinc-200 bg-zinc-50/50 font-black italic text-lg"
+                                {...field}
                                 value={field.value || ""}
-                                placeholder="Masukkan harga Ticket"
                                 onChange={(e) =>
                                   field.onChange(
                                     e.target.value === ""
@@ -270,27 +272,21 @@ export default function CreateEvent() {
                         )}
                       />
 
-                      {/* Total Seats */}
                       <Controller
                         name="totalSeats"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="totalSeats">
-                              Total Seats *
+                            <FieldLabel className="text-[10px] font-black uppercase text-zinc-400">
+                              Total Kursi
                             </FieldLabel>
                             <div className="relative">
-                              <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Users className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                               <Input
-                                id="totalSeats"
                                 type="number"
-                                className="pl-10"
-                                aria-invalid={fieldState.invalid}
-                                name={field.name}
-                                ref={field.ref}
-                                onBlur={field.onBlur}
+                                className="pl-12 h-12 rounded-xl border-zinc-200 bg-zinc-50/50 font-black italic text-lg"
+                                {...field}
                                 value={field.value || ""}
-                                placeholder="Isi Total Bangku"
                                 onChange={(e) =>
                                   field.onChange(
                                     e.target.value === ""
@@ -300,8 +296,9 @@ export default function CreateEvent() {
                                 }
                               />
                             </div>
-                            <p className="text-[10px] text-muted-foreground italic mt-1">
-                              Available seats will be set equal to total seats.
+                            <p className="text-[10px] text-zinc-400 font-medium italic mt-2 leading-relaxed">
+                              * Kapasitas tersedia akan disetel sesuai total
+                              kursi.
                             </p>
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -313,22 +310,40 @@ export default function CreateEvent() {
                   </Card>
 
                   {/* Banner Image */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Event Banner</CardTitle>
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                    <CardHeader className="bg-zinc-50/50 border-b border-zinc-100">
+                      <CardTitle className="text-xs font-black uppercase tracking-widest text-zinc-900 italic">
+                        Banner Event
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-6">
                       <Controller
                         name="image"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:bg-muted">
-                              <ImageIcon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                              <p className="mt-2 text-xs font-medium text-center">
+                            <div
+                              className={cn(
+                                "group relative flex cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border-2 border-dashed transition-all p-8",
+                                field.value
+                                  ? "border-orange-500 bg-orange-50/10"
+                                  : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-50 hover:border-zinc-300",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "p-4 rounded-full mb-3 transition-transform group-hover:scale-110",
+                                  field.value
+                                    ? "bg-orange-500 text-white"
+                                    : "bg-white text-zinc-400 shadow-sm",
+                                )}
+                              >
+                                <ImageIcon className="h-6 w-6" />
+                              </div>
+                              <p className="text-[10px] font-black uppercase tracking-tighter text-center leading-tight">
                                 {field.value
                                   ? (field.value as File).name
-                                  : "Upload Event Image"}
+                                  : "Upload Image"}
                               </p>
                               <input
                                 type="file"
@@ -354,21 +369,29 @@ export default function CreateEvent() {
                     <Button
                       type="submit"
                       form="form-create-event"
-                      size="lg"
-                      className="w-full"
                       disabled={isPending}
+                      className="w-full bg-zinc-900 hover:bg-black text-white rounded-2xl h-14 shadow-xl shadow-zinc-200 transition-all active:scale-95 font-black uppercase text-xs tracking-[0.2em] italic"
                     >
-                      <Save className="mr-2 h-4 w-4" />
-                      {isPending ? "Creating..." : "Create Event"}
+                      {isPending ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          Publishing...
+                        </div>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4 text-orange-500" />{" "}
+                          Create Event
+                        </>
+                      )}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="lg"
-                      className="w-full"
+                      className="w-full rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest text-zinc-400 hover:text-red-500 transition-colors"
                       asChild
                       disabled={isPending}
                     >
-                      <Link to="/organizer/events">Cancel</Link>
+                      <Link to="/organizer/events">Batal & Buang</Link>
                     </Button>
                   </div>
                 </div>

@@ -11,6 +11,8 @@ import {
   MapPin,
   Save,
   Users,
+  PencilLine,
+  Ticket,
 } from "lucide-react";
 
 import { useAuth } from "~/stores/useAuth";
@@ -20,15 +22,15 @@ import {
   updateEventSchema,
   type UpdateEventSchema,
 } from "~/schema/update-event";
-
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Skeleton } from "~/components/ui/skeleton";
+import { cn } from "~/lib/utils";
 
-// ─── Route Guard ──────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export const clientLoader = () => {
   const user = useAuth.getState().user;
@@ -36,16 +38,18 @@ export const clientLoader = () => {
   if (user.role !== "ORGANIZER") return redirect("/");
 };
 
+const toLocalDatetime = (iso: string) =>
+  new Date(iso).toISOString().slice(0, 16);
+
+const toNumber = (val: string) => (val === "" ? 0 : Number(val));
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function EditEvent() {
-  // Ambil slug dari URL: /dashboard/events/edit/:slug
   const { slug } = useParams<{ slug: string }>();
 
-  // 1. Fetch data event pakai slug (sama persis seperti EventDetail)
   const { data: event, isPending: isLoading } = useGetEventBySlug(slug!);
 
-  // 2. Setup form
   const form = useForm<UpdateEventSchema>({
     resolver: zodResolver(updateEventSchema),
     defaultValues: {
@@ -60,14 +64,8 @@ export default function EditEvent() {
     },
   });
 
-  // 3. Isi form setelah data event selesai di-fetch
   useEffect(() => {
     if (!event) return;
-
-    // Konversi ISO string → format datetime-local (YYYY-MM-DDTHH:mm)
-    const toLocalDatetime = (iso: string) =>
-      new Date(iso).toISOString().slice(0, 16);
-
     form.reset({
       name: event.name,
       description: event.description ?? "",
@@ -76,11 +74,10 @@ export default function EditEvent() {
       totalSeats: event.totalSeats,
       startDate: toLocalDatetime(event.startDate),
       endDate: toLocalDatetime(event.endDate),
-      image: undefined, // file input selalu kosong; image lama tetap dipakai bila tidak diubah
+      image: undefined,
     });
   }, [event, form]);
 
-  // 4. Mutation — pakai event.id (number) untuk PATCH /events/:id
   const { mutate: updateEvent, isPending } = useUpdateEvent(event?.id ?? 0);
 
   function onSubmit(data: UpdateEventSchema) {
@@ -91,12 +88,13 @@ export default function EditEvent() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen bg-zinc-50/50">
         <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-5xl mx-auto space-y-6">
+          <div className="max-w-6xl mx-auto space-y-6">
             <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-64 w-full" />
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-2 w-full" />
+            <Skeleton className="h-64 w-full rounded-3xl" />
+            <Skeleton className="h-40 w-full rounded-3xl" />
           </div>
         </main>
       </div>
@@ -106,60 +104,83 @@ export default function EditEvent() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-zinc-50/50">
       <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="p-6 lg:p-10 max-w-6xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
           >
-            {/* Header */}
-            <div className="mb-8">
-              <Button variant="ghost" asChild className="mb-4 -ml-2">
+            {/* ── Header ───────────────────────────────────────────────── */}
+            <div className="mb-10">
+              <Button
+                variant="ghost"
+                asChild
+                className="mb-6 -ml-2 text-zinc-500 hover:text-zinc-900 font-bold uppercase text-[10px] tracking-widest"
+              >
                 <Link to="/organizer/events">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Events
+                  <ArrowLeft className="mr-2 h-3 w-3" /> Back to Events
                 </Link>
               </Button>
-              <h1 className="font-display text-3xl font-bold tracking-tight">
-                Edit Event
+
+              {/* Edit Mode badge — pembeda utama dari Create Event */}
+              <div className="flex items-center gap-2 mb-2">
+                <PencilLine className="w-4 h-4 text-orange-500" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
+                  Edit Event
+                </span>
+              </div>
+
+              {/* Judul menampilkan nama event yang sedang diedit */}
+              <h1 className="text-4xl font-black tracking-tighter text-zinc-900 uppercase italic leading-none">
+                Ubah{" "}
+                <span className="relative text-orange-500">
+                  {event?.name ?? "Event"}
+                  <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-orange-200 rounded-full" />
+                </span>
               </h1>
-              <p className="text-muted-foreground">
-                Update the details of your event.
+              <p className="text-zinc-500 text-sm font-medium mt-3">
+                Perbarui informasi event. Perubahan tersimpan setelah kamu
+                menekan tombol simpan.
               </p>
+
+              {/* Dashed divider — penanda visual "sedang dalam mode edit" */}
+              <div className="mt-5 border-t-2 border-dashed border-zinc-200" />
             </div>
 
-            {/* FORM */}
+            {/* ── Form ─────────────────────────────────────────────────── */}
             <form
               id="form-edit-event"
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-8 pb-20"
             >
               <div className="grid gap-8 lg:grid-cols-3">
-                {/* ── Kiri ────────────────────────────────────────────────── */}
-                <div className="lg:col-span-2 space-y-6">
+                {/* ── Kiri ─────────────────────────────────────────────── */}
+                <div className="lg:col-span-2 space-y-8">
                   {/* Event Information */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        Event Information
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                    <CardHeader className="border-b border-zinc-50 bg-zinc-50/30">
+                      <CardTitle className="flex items-center gap-3 text-zinc-900 font-black uppercase italic text-lg tracking-tight">
+                        <FileText className="h-5 w-5 text-orange-500" />
+                        Informasi Event
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Name */}
+                    <CardContent className="p-8 space-y-6">
                       <Controller
                         name="name"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="name">Event Name *</FieldLabel>
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Nama Event *
+                            </FieldLabel>
                             <Input
                               {...field}
                               id="name"
                               aria-invalid={fieldState.invalid}
-                              placeholder="Enter event name"
+                              className="h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold tracking-tight"
+                              placeholder="Masukkan nama event"
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -168,21 +189,20 @@ export default function EditEvent() {
                         )}
                       />
 
-                      {/* Description */}
                       <Controller
                         name="description"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="description">
-                              Description
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Deskripsi Event
                             </FieldLabel>
                             <Textarea
                               {...field}
                               id="description"
                               aria-invalid={fieldState.invalid}
-                              placeholder="Tell people what this event is about..."
-                              rows={8}
+                              className="rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-medium min-h-[200px]"
+                              placeholder="Ceritakan detail tentang acara Anda..."
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -191,21 +211,22 @@ export default function EditEvent() {
                         )}
                       />
 
-                      {/* Location */}
                       <Controller
                         name="location"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="location">Location</FieldLabel>
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Lokasi Venue
+                            </FieldLabel>
                             <div className="relative">
-                              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-orange-500" />
                               <Input
                                 {...field}
                                 id="location"
                                 aria-invalid={fieldState.invalid}
-                                placeholder="Physical venue or link"
-                                className="pl-10"
+                                className="pl-12 h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold"
+                                placeholder="Gedung, Kota, atau Link Zoom"
                               />
                             </div>
                             {fieldState.invalid && (
@@ -218,28 +239,28 @@ export default function EditEvent() {
                   </Card>
 
                   {/* Schedule */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        Schedule
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                    <CardHeader className="border-b border-zinc-50 bg-zinc-50/30">
+                      <CardTitle className="flex items-center gap-3 text-zinc-900 font-black uppercase italic text-lg tracking-tight">
+                        <Calendar className="h-5 w-5 text-orange-500" />
+                        Waktu & Jadwal
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid gap-4 sm:grid-cols-2">
-                      {/* Start Date */}
+                    <CardContent className="p-8 grid gap-6 sm:grid-cols-2">
                       <Controller
                         name="startDate"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="startDate">
-                              Start Date & Time *
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Waktu Mulai *
                             </FieldLabel>
                             <Input
                               {...field}
                               id="startDate"
                               type="datetime-local"
                               aria-invalid={fieldState.invalid}
+                              className="h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold uppercase text-[11px]"
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -248,20 +269,20 @@ export default function EditEvent() {
                         )}
                       />
 
-                      {/* End Date */}
                       <Controller
                         name="endDate"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="endDate">
-                              End Date & Time *
+                            <FieldLabel className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                              Waktu Selesai *
                             </FieldLabel>
                             <Input
                               {...field}
                               id="endDate"
                               type="datetime-local"
                               aria-invalid={fieldState.invalid}
+                              className="h-12 rounded-xl border-zinc-200 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 font-bold uppercase text-[11px]"
                             />
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
@@ -273,41 +294,40 @@ export default function EditEvent() {
                   </Card>
                 </div>
 
-                {/* ── Kanan ───────────────────────────────────────────────── */}
-                <div className="space-y-6">
+                {/* ── Kanan ────────────────────────────────────────────── */}
+                <div className="space-y-8">
                   {/* Ticket Setting */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Ticket Setting</CardTitle>
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden relative">
+                    <div className="absolute top-1/2 -left-3 w-6 h-6 bg-zinc-50 rounded-full border border-zinc-100 -translate-y-1/2" />
+                    <CardHeader className="bg-zinc-900 text-white">
+                      <CardTitle className="text-sm font-black uppercase tracking-widest italic flex items-center gap-2">
+                        <Ticket className="w-4 h-4 text-orange-500" />
+                        Pengaturan Tiket
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Price */}
+                    <CardContent className="p-6 space-y-6 mt-4">
                       <Controller
                         name="price"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="price">Price (Rp)</FieldLabel>
+                            <FieldLabel className="text-[10px] font-black uppercase text-zinc-400">
+                              Harga (IDR)
+                            </FieldLabel>
                             <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-orange-600 italic">
                                 Rp
                               </span>
                               <Input
                                 id="price"
                                 type="number"
-                                className="pl-10"
-                                aria-invalid={fieldState.invalid}
+                                className="pl-12 h-12 rounded-xl border-zinc-200 bg-zinc-50/50 font-black italic text-lg"
                                 name={field.name}
                                 ref={field.ref}
                                 onBlur={field.onBlur}
                                 value={field.value ?? ""}
-                                placeholder="Masukkan harga Ticket"
                                 onChange={(e) =>
-                                  field.onChange(
-                                    e.target.value === ""
-                                      ? 0
-                                      : Number(e.target.value),
-                                  )
+                                  field.onChange(toNumber(e.target.value))
                                 }
                               />
                             </div>
@@ -318,36 +338,33 @@ export default function EditEvent() {
                         )}
                       />
 
-                      {/* Total Seats */}
                       <Controller
                         name="totalSeats"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="totalSeats">
-                              Total Seats *
+                            <FieldLabel className="text-[10px] font-black uppercase text-zinc-400">
+                              Total Kursi
                             </FieldLabel>
                             <div className="relative">
-                              <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Users className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                               <Input
                                 id="totalSeats"
                                 type="number"
-                                className="pl-10"
-                                aria-invalid={fieldState.invalid}
+                                className="pl-12 h-12 rounded-xl border-zinc-200 bg-zinc-50/50 font-black italic text-lg"
                                 name={field.name}
                                 ref={field.ref}
                                 onBlur={field.onBlur}
                                 value={field.value ?? ""}
-                                placeholder="Isi Total Bangku"
                                 onChange={(e) =>
-                                  field.onChange(
-                                    e.target.value === ""
-                                      ? 0
-                                      : Number(e.target.value),
-                                  )
+                                  field.onChange(toNumber(e.target.value))
                                 }
                               />
                             </div>
+                            <p className="text-[10px] text-zinc-400 font-medium italic mt-2 leading-relaxed">
+                              * Kapasitas tersedia akan disetel sesuai total
+                              kursi.
+                            </p>
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
                             )}
@@ -357,40 +374,59 @@ export default function EditEvent() {
                     </CardContent>
                   </Card>
 
-                  {/* Event Banner */}
-                  <Card className="border-border/50">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Event Banner</CardTitle>
+                  {/* Banner Event */}
+                  <Card className="border-none shadow-sm rounded-[2rem] bg-white overflow-hidden">
+                    <CardHeader className="bg-zinc-50/50 border-b border-zinc-100">
+                      <CardTitle className="text-xs font-black uppercase tracking-widest text-zinc-900 italic">
+                        Banner Event
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      {/* Preview image lama dari Cloudinary */}
+                    <CardContent className="p-6 space-y-4">
+                      {/* Preview banner lama — hanya ada di halaman Edit */}
                       {event?.image && (
-                        <div className="overflow-hidden rounded-lg border border-border">
+                        <div className="overflow-hidden rounded-2xl border border-zinc-100 relative">
                           <img
                             src={event.image}
                             alt="Current event banner"
                             className="h-36 w-full object-cover"
                           />
-                          <p className="px-3 py-1.5 text-[10px] text-muted-foreground italic bg-muted/50">
-                            Current banner — upload a new image to replace it.
-                          </p>
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 py-2">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-white/80">
+                              Banner saat ini
+                            </p>
+                          </div>
                         </div>
                       )}
 
-                      {/* File input untuk ganti image (opsional) */}
                       <Controller
                         name="image"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 transition-colors hover:bg-muted">
-                              <ImageIcon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                              <p className="mt-2 text-xs font-medium text-center">
+                            <div
+                              className={cn(
+                                "group relative flex cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border-2 border-dashed transition-all p-8",
+                                field.value
+                                  ? "border-orange-500 bg-orange-50/10"
+                                  : "border-zinc-200 bg-zinc-50/50 hover:bg-zinc-50 hover:border-zinc-300",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "p-4 rounded-full mb-3 transition-transform group-hover:scale-110",
+                                  field.value
+                                    ? "bg-orange-500 text-white"
+                                    : "bg-white text-zinc-400 shadow-sm",
+                                )}
+                              >
+                                <ImageIcon className="h-6 w-6" />
+                              </div>
+                              <p className="text-[10px] font-black uppercase tracking-tighter text-center leading-tight">
                                 {field.value
                                   ? (field.value as File).name
                                   : event?.image
-                                    ? "Click to replace image"
-                                    : "Upload Event Image"}
+                                    ? "Ganti Banner"
+                                    : "Upload Banner"}
                               </p>
                               <input
                                 type="file"
@@ -416,21 +452,29 @@ export default function EditEvent() {
                     <Button
                       type="submit"
                       form="form-edit-event"
-                      size="lg"
-                      className="w-full"
                       disabled={isPending}
+                      className="w-full bg-zinc-900 hover:bg-black text-white rounded-2xl h-14 shadow-xl shadow-zinc-200 transition-all active:scale-95 font-black uppercase text-xs tracking-[0.2em] italic"
                     >
-                      <Save className="mr-2 h-4 w-4" />
-                      {isPending ? "Saving..." : "Save Changes"}
+                      {isPending ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          Menyimpan...
+                        </div>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4 text-orange-500" />
+                          Simpan Perubahan
+                        </>
+                      )}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="lg"
-                      className="w-full"
+                      className="w-full rounded-2xl h-14 font-black uppercase text-[10px] tracking-widest text-zinc-400 hover:text-red-500 transition-colors"
                       asChild
                       disabled={isPending}
                     >
-                      <Link to="/dashboard/events">Cancel</Link>
+                      <Link to="/organizer/events">Batal & Buang</Link>
                     </Button>
                   </div>
                 </div>
