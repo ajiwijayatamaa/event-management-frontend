@@ -18,7 +18,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
-import useGetEvents from "~/hooks/api/useGetEvents";
+import useGetOrganizerEvents from "~/hooks/api/useGetOrganizerEvents";
 import { useAuth } from "~/stores/useAuth";
 import { formatDate, formatDateShort } from "~/utils/formatter";
 
@@ -44,7 +44,7 @@ const MyEvents = () => {
     data: events,
     isPending,
     isError,
-  } = useGetEvents({
+  } = useGetOrganizerEvents({
     page,
     take: 3,
     search: debouncedValue,
