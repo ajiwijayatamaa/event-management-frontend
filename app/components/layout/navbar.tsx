@@ -6,8 +6,9 @@ import {
   Search,
   Ticket,
   User,
+  Settings,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { Input } from "~/components/ui/input";
 import { useAuth } from "~/stores/useAuth";
@@ -17,30 +18,34 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b-4 border-[#1a1a1a] bg-white">
+    <nav className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-8 w-8 items-center justify-center border-2 border-[#1a1a1a] bg-[#ff6b35] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <Ticket className="h-4 w-4 text-white" />
+          {/* Logo - Tetap Konsisten */}
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-white shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform">
+              <Ticket className="h-5 w-5 text-orange-400 rotate-12" />
             </div>
-            <span className="text-xl font-black uppercase tracking-tighter text-[#1a1a1a]">
-              Eventify
+            <span className="text-xl font-black tracking-tighter text-zinc-900 italic">
+              EVENTIFY<span className="text-orange-500">.</span>
             </span>
           </Link>
 
-          {/* Navigasi Tengah */}
-          <div className="hidden items-center gap-6 md:flex">
+          {/* Navigasi Tengah - DIBALIKKAN KE ASLI (Hanya Browse Events) */}
+          <div className="hidden items-center md:flex">
             <Link
               to="/"
-              className={`text-xs font-bold uppercase tracking-widest transition-all ${
+              className={`px-4 py-2 text-xs font-black uppercase tracking-widest transition-all rounded-full ${
                 isActive("/")
-                  ? "border-b-4 border-[#ff6b35] text-[#1a1a1a]"
-                  : "text-[#1a1a1a]/60 hover:text-[#1a1a1a]"
+                  ? "bg-orange-50 text-orange-600"
+                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
               }`}
             >
               Browse Events
@@ -50,12 +55,12 @@ const Navbar = () => {
           {/* Bagian Kanan */}
           <div className="flex items-center gap-4">
             {!location.pathname.startsWith("/organizer") && (
-              <div className="hidden max-w-[200px] relative lg:block">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#1a1a1a]" />
+              <div className="hidden max-w-[180px] relative lg:block">
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
                 <Input
                   type="search"
-                  placeholder="Search..."
-                  className="w-full pl-9 bg-[#f5f5f5] border-2 border-[#1a1a1a] rounded-none h-8 text-[10px] font-bold focus:ring-0 focus:offset-0"
+                  placeholder="Search events..."
+                  className="w-full pl-9 bg-zinc-100 border-none rounded-full h-9 text-[11px] font-bold focus-visible:ring-2 focus-visible:ring-orange-500/20 transition-all"
                 />
               </div>
             )}
@@ -63,10 +68,10 @@ const Navbar = () => {
             {user ? (
               <div className="relative">
                 <button
-                  className="flex items-center gap-2 border-2 border-[#1a1a1a] bg-white p-1 pr-2 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
                   onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-2.5 p-1 rounded-full hover:bg-zinc-100 transition-all border border-transparent hover:border-zinc-200"
                 >
-                  <div className="h-7 w-7 border border-[#1a1a1a] bg-[#ffeb3b] overflow-hidden">
+                  <div className="h-8 w-8 rounded-full border-2 border-orange-400/30 overflow-hidden bg-zinc-100 shadow-inner flex items-center justify-center">
                     {user.profilePicture ? (
                       <img
                         src={user.profilePicture}
@@ -74,14 +79,14 @@ const Navbar = () => {
                         alt="pfp"
                       />
                     ) : (
-                      <User className="h-4 w-4 m-auto mt-1" />
+                      <User className="h-4 w-4 text-zinc-400" />
                     )}
                   </div>
-                  <span className="hidden md:inline text-[10px] font-black uppercase tracking-tight">
+                  <span className="hidden md:inline text-[11px] font-black uppercase tracking-tight text-zinc-700">
                     {user.name.split(" ")[0]}
                   </span>
                   <ChevronDown
-                    className={`h-3 w-3 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+                    className={`h-3 w-3 text-zinc-400 transition-transform duration-300 ${menuOpen ? "rotate-180" : ""}`}
                   />
                 </button>
 
@@ -93,40 +98,35 @@ const Navbar = () => {
                         onClick={() => setMenuOpen(false)}
                       />
                       <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute right-0 mt-2 w-56 border-4 border-[#1a1a1a] bg-white shadow-[6px_6px_0px_0px_rgba(26,26,26,1)] z-50 overflow-hidden font-mono"
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="absolute right-0 mt-3 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-2xl shadow-zinc-200/50 z-50 overflow-hidden"
                       >
-                        {/* --- LOGIKA DINAMIS DISINI --- */}
                         {user.role === "ORGANIZER" && (
                           <Link
                             to="/organizer/dashboard"
-                            onClick={() => setMenuOpen(false)}
-                            className="flex items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase border-b-2 border-[#1a1a1a] bg-[#ffffff] text-black hover:bg-[#e85a2a] transition-colors"
+                            className="flex items-center gap-3 px-3 py-2.5 text-[11px] font-black uppercase bg-zinc-900 text-white rounded-xl mb-1 hover:bg-black transition-colors"
                           >
-                            <LayoutDashboard className="h-3.5 w-3.5" />{" "}
+                            <LayoutDashboard className="h-4 w-4 text-orange-400" />{" "}
                             Organizer Dashboard
                           </Link>
                         )}
-                        {/* ----------------------------- */}
 
                         <Link
                           to="/profile"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase border-b-2 border-[#1a1a1a] hover:bg-[#ffeb3b] transition-colors"
+                          className="flex items-center gap-3 px-3 py-2.5 text-[11px] font-black uppercase text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors"
                         >
-                          <User className="h-3.5 w-3.5" /> Profile
+                          <Settings className="h-4 w-4" /> Profile Settings
                         </Link>
 
+                        <div className="my-1 border-t border-zinc-100" />
+
                         <button
-                          onClick={() => {
-                            logout();
-                            setMenuOpen(false);
-                          }}
-                          className="flex w-full items-center gap-2 px-4 py-3 text-[11px] font-bold uppercase text-red-500 hover:bg-red-50 transition-colors text-left"
+                          onClick={() => logout()}
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-[11px] font-black uppercase text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                         >
-                          <LogOut className="h-3.5 w-3.5" /> Logout
+                          <LogOut className="h-4 w-4" /> Logout
                         </button>
                       </motion.div>
                     </>
@@ -137,12 +137,12 @@ const Navbar = () => {
               <div className="flex items-center gap-3">
                 <Link
                   to="/login"
-                  className="text-[10px] font-black uppercase hover:underline"
+                  className="text-[11px] font-black uppercase text-zinc-600 hover:text-zinc-900"
                 >
                   Login
                 </Link>
                 <Link to="/register">
-                  <button className="bg-[#1a1a1a] text-white px-4 py-1.5 text-[10px] font-black uppercase border-2 border-[#1a1a1a] shadow-[2px_2px_0px_0px_rgba(255,107,53,1)]">
+                  <button className="bg-zinc-900 text-white px-5 py-2 text-[11px] font-black uppercase rounded-full shadow-lg shadow-zinc-900/20 hover:bg-black transition-all active:scale-95">
                     Register
                   </button>
                 </Link>
