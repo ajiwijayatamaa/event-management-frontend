@@ -15,6 +15,7 @@ import { formatDate, formatPrice } from "~/utils/formatter";
 export const clientLoader = () => {
   const user = useAuth.getState().user;
   if (!user) return redirect("/login");
+  if (user.role !== "ORGANIZER") return redirect("/");
 };
 
 const EventAttendees = () => {

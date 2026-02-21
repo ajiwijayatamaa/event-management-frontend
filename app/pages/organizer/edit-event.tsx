@@ -33,6 +33,7 @@ import { Skeleton } from "~/components/ui/skeleton";
 export const clientLoader = () => {
   const user = useAuth.getState().user;
   if (!user) return redirect("/login");
+  if (user.role !== "ORGANIZER") return redirect("/");
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────

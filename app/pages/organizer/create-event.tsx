@@ -28,6 +28,7 @@ import OrganizerSidebar from "~/components/layout/organizer-sidebar";
 export const clientLoader = () => {
   const user = useAuth.getState().user;
   if (!user) return redirect("/login");
+  if (user.role !== "ORGANIZER") return redirect("/");
 };
 
 export default function CreateEvent() {
