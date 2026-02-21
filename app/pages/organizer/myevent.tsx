@@ -204,19 +204,6 @@ const MyEvents = () => {
                           <Users size={12} /> Peserta
                         </Link>
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="rounded-xl h-9 text-[10px] font-black uppercase tracking-widest border-zinc-200 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white transition-all"
-                      >
-                        <Link
-                          to={`/dashboard/events/${event.slug}/transactions`}
-                          className="gap-2"
-                        >
-                          <Receipt size={12} /> Transaksi
-                        </Link>
-                      </Button>
                     </div>
                   </div>
 
