@@ -173,7 +173,7 @@ const MyEvents = () => {
                         asChild
                         className="h-8 gap-1.5"
                       >
-                        <Link to={`/dashboard/events/edit/${event.slug}`}>
+                        <Link to={`/organizer/events/edit/${event.slug}`}>
                           <Settings size={14} /> Edit
                         </Link>
                       </Button>

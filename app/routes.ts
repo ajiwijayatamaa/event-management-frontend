@@ -10,6 +10,7 @@ export default [
   route("/organizer/events", "pages/organizer/myevent.tsx"),
   route("/events/:slug", "pages/customer/even-detail.tsx"),
   route("/organizer/events/create", "pages/organizer/create-event.tsx"),
+  route("/organizer/events/edit/:slug", "pages/organizer/edit-event.tsx"),
   route("/organizer/transactions", "pages/organizer/transaction.tsx"),
   route(
     "/organizer/events/:id/attendees",
