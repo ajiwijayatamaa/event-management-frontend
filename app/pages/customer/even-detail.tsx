@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import {
   Calendar,
@@ -10,9 +9,7 @@ import {
   Minus,
   Plus,
   AlertCircle,
-  Users,
 } from "lucide-react";
-import { axiosInstance } from "~/lib/axios";
 import Navbar from "~/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
@@ -24,6 +21,8 @@ import { Separator } from "~/components/ui/separator";
 import { useAuth } from "~/stores/useAuth";
 import { Badge } from "~/components/ui/badge";
 import { formatDate, formatPrice } from "~/utils/formatter";
+import useGetEventBySlug from "~/hooks/api/useGetEventBySlug";
+import { axiosInstance } from "~/lib/axios";
 
 const EventDetail = () => {
   const { user } = useAuth();
@@ -38,14 +37,8 @@ const EventDetail = () => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // FETCH DATA EVENT
-  const { data: event, isPending } = useQuery({
-    queryKey: ["event", slug],
-    queryFn: async () => {
-      const { data } = await axiosInstance.get(`/events/${slug}`);
-      return data;
-    },
-  });
+  // FETCH DATA EVENT (pindah ke hook)
+  const { data: event, isPending } = useGetEventBySlug(slug!);
 
   const userPointsBalance = user?.points || 0;
 
@@ -193,7 +186,7 @@ const EventDetail = () => {
               {/* Review Section */}
               <Card className="border-none shadow-lg overflow-hidden">
                 <CardHeader className="bg-gray-50/50">
-                  <CardTitle className="text-xl font-black uppercase italic italic">
+                  <CardTitle className="text-xl font-black uppercase italic">
                     User Reviews
                   </CardTitle>
                 </CardHeader>
