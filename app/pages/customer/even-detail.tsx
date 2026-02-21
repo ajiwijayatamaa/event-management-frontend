@@ -22,23 +22,22 @@ import { useAuth } from "~/stores/useAuth";
 import { Badge } from "~/components/ui/badge";
 import { formatDate, formatPrice } from "~/utils/formatter";
 import useGetEventBySlug from "~/hooks/api/useGetEventBySlug";
-import { axiosInstance } from "~/lib/axios";
+import useCreateTransaction from "~/hooks/api/useCreateTransaction";
 
 const EventDetail = () => {
   const { user } = useAuth();
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  // STATE UNTUK TRANSAKSI
   const [ticketCount, setTicketCount] = useState(1);
   const [usePoints, setUsePoints] = useState(false);
   const [selectedVoucherId, setSelectedVoucherId] = useState<number | null>(
     null,
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // FETCH DATA EVENT (pindah ke hook)
   const { data: event, isPending } = useGetEventBySlug(slug!);
+  const { mutate: createTransaction, isPending: isSubmitting } =
+    useCreateTransaction();
 
   const userPointsBalance = user?.points || 0;
 
@@ -48,6 +47,7 @@ const EventDetail = () => {
         Loading Event...
       </div>
     );
+
   if (!event)
     return (
       <div className="p-20 text-center font-black text-destructive uppercase">
@@ -55,7 +55,6 @@ const EventDetail = () => {
       </div>
     );
 
-  // --- LOGIKA VALIDASI & KALKULASI ---
   const isEventPast = new Date(event.endDate) < new Date();
   const subtotal = Number(event.price) * ticketCount;
 
@@ -72,27 +71,16 @@ const EventDetail = () => {
     : 0;
   const finalPrice = totalAfterDiscount - pointsToUse;
 
-  const handleBooking = async () => {
+  const handleBooking = () => {
     if (!user) return navigate("/login");
 
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        eventId: event.id,
-        ticketCount,
-        voucherId: selectedVoucherId,
-        usePoints,
-        totalPrice: finalPrice,
-      };
-
-      await axiosInstance.post("/transactions", payload);
-      alert("Booking successful! Enjoy your event.");
-      navigate("/dashboard/orders");
-    } catch (error: any) {
-      alert(error.response?.data?.message || "Transaction failed");
-    } finally {
-      setIsSubmitting(false);
-    }
+    createTransaction({
+      eventId: event.id,
+      ticketCount,
+      voucherId: selectedVoucherId,
+      usePoints,
+      totalPrice: finalPrice,
+    });
   };
 
   return (
@@ -137,7 +125,6 @@ const EventDetail = () => {
                     {event.name}
                   </h1>
 
-                  {/* INFO RINGKAS (WAKTU & LOKASI) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 bg-[#1a1a1a] text-white p-6 rounded-2xl shadow-xl">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-blue-600 rounded-xl">
