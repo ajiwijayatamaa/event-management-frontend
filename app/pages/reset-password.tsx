@@ -52,7 +52,7 @@ const ResetPassword = ({ params }: Route.ComponentProps) => {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
               <Ticket className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold">Eventify</span>
+            <span className="text-2xl font-bold">EVENTIFIRE</span>
           </Link>
 
           <Card className="border-border/50 shadow-xl">

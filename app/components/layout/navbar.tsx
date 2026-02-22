@@ -34,7 +34,7 @@ const Navbar = () => {
               <Ticket className="h-5 w-5 text-orange-400 rotate-12" />
             </div>
             <span className="text-xl font-black tracking-tighter text-zinc-900 italic">
-              EVENTIFY<span className="text-orange-500">.</span>
+              EVENTIFIRE<span className="text-orange-500">.</span>
             </span>
           </Link>
 
