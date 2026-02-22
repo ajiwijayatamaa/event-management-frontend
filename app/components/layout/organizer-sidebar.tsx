@@ -69,7 +69,7 @@ const OrganizerSidebar = () => {
                 <Ticket className="h-5 w-5 text-orange-400 rotate-12" />
               </div>
               <span className="text-xl font-black tracking-tighter text-zinc-900 italic uppercase">
-                EVENTIFY<span className="text-orange-500">.</span>
+                EVENTIFIRE<span className="text-orange-500">.</span>
               </span>
             </Link>
           )}
@@ -157,7 +157,9 @@ const OrganizerSidebar = () => {
             <div className="mt-4 px-4 py-3 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
               <p className="text-[9px] font-bold text-zinc-400 uppercase leading-tight">
                 Mode Organizer <br />
-                <span className="text-orange-500">Eventify Terverifikasi</span>
+                <span className="text-orange-500">
+                  EVENTIFIRE Terverifikasi
+                </span>
               </p>
             </div>
           )}

@@ -12,11 +12,11 @@ const Footer = () => {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary">
                 <Ticket className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-display text-xl font-bold">Eventify</span>
+              <span className="font-display text-xl font-bold">EVENTIFIRE</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Discover and book amazing events. Create unforgettable experiences
-              with Eventify.
+              with EVENTIFIRE.
             </p>
             <div className="flex gap-4">
               <a
@@ -166,7 +166,7 @@ const Footer = () => {
 
         <div className="mt-12 border-t border-border pt-8">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Eventify. All rights reserved.
+            © {new Date().getFullYear()} EVENTIFIRE. All rights reserved.
           </p>
         </div>
       </div>
